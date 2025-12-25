@@ -6,6 +6,7 @@ $id = $_GET['id'] ?? 0;
 $query = mysqli_query($conn, "
     SELECT * FROM blog
     WHERE id_blog = '$id' AND status = 'publish'
+    
 ");
 
 $data = mysqli_fetch_assoc($query);
