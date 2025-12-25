@@ -1,9 +1,13 @@
 <?php
 require_once '../config.php';
 
-// Cek Jika Sudah Login
+// CEK JIKA SUDAH LOGIN
 if (isset($_SESSION['user_id'])) {
-    header('Location: ../users/beranda.php');
+    if ($_SESSION['role_id'] === 'admin') {
+        header('Location: ../admin/dashboard.php');
+    } else {
+        header('Location: ../users/beranda.php');
+    }
     exit();
 }
 
@@ -53,33 +57,64 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $result = mysqli_query($conn, $query);
 
         if ($user = mysqli_fetch_assoc($result)) {
+            // if (password_verify($password, $user['password'])) {
+
+            //     // SET SESSION
+            //     $_SESSION['user_id'] = $user['id_user'];
+            //     $_SESSION['email'] = $user['email'];
+            //     $_SESSION['nama'] = $user['nama'];
+            //     $_SESSION['role_id'] = $user['role_id'];
+            //     $_SESSION['last_activity'] = time();
+
+            //     // REMEMBER ME
+            //     if ($remember) {
+            //         $token = hash('sha256', $user['email'] . $user['password']);
+            //         $cookie_value = $user['id_user'] . ':' . $token;
+            //         setcookie('remember_user', $cookie_value, time() + (30 * 24 * 60 * 60), '/');
+            //     }
+
+            //     // SUCCESS
+            //     $success = 'Login berhasil! Selamat datang 👋';
+
+            //     // REDIRECT TUJUAN
+            //     $redirect = ($user['role_id'] == 'admin')
+            //         ? '../admin/dashboard.php'
+            //         : '../users/beranda.php';
+
+            // } else {
+            //     $error = 'Email atau password salah!';
+            // }
+
             if (password_verify($password, $user['password'])) {
 
-                // SET SESSION
-                $_SESSION['user_id'] = $user['id_user'];
-                $_SESSION['email'] = $user['email'];
-                $_SESSION['nama'] = $user['nama'];
-                $_SESSION['role_id'] = $user['role_id'];
-                $_SESSION['last_activity'] = time();
+                // ===== CEK STATUS =====
+                if ($user['status'] !== 'aktif') {
+                    $error = 'Akun Anda nonaktif. Tidak bisa login!';
+                } else {
+                    // SET SESSION
+                    $_SESSION['user_id'] = $user['id_user'];
+                    $_SESSION['email'] = $user['email'];
+                    $_SESSION['nama'] = $user['nama'];
+                    $_SESSION['role_id'] = $user['role_id'];
+                    $_SESSION['last_activity'] = time();
 
-                // REMEMBER ME
-                if ($remember) {
-                    $token = hash('sha256', $user['email'] . $user['password']);
-                    $cookie_value = $user['id_user'] . ':' . $token;
-                    setcookie('remember_user', $cookie_value, time() + (30 * 24 * 60 * 60), '/');
+                    // REMEMBER ME
+                    if ($remember) {
+                        $token = hash('sha256', $user['email'] . $user['password']);
+                        $cookie_value = $user['id_user'] . ':' . $token;
+                        setcookie('remember_user', $cookie_value, time() + (30 * 24 * 60 * 60), '/');
+                    }
+
+                    // SUCCESS
+                    $success = 'Login berhasil! Selamat datang 👋';
+
+                    // REDIRECT TUJUAN
+                    $redirect = ($user['role_id'] == 'admin')
+                        ? '../admin/dashboard.php'
+                        : '../users/beranda.php';
                 }
-
-                // SUCCESS
-                $success = 'Login berhasil! Selamat datang 👋';
-
-                // REDIRECT TUJUAN
-                $redirect = ($user['role_id'] == 'admin')
-                    ? '../admin/dashboard.php'
-                    : '../users/beranda.php';
-
-            } else {
-                $error = 'Email atau password salah!';
             }
+
         } else {
             $error = 'Email atau password salah!';
         }
@@ -369,7 +404,8 @@ Swal.fire({
         Swal.getPopup().classList.add('swal-success');
     }
 }).then(() => {
-    window.location.href = "login.php";
+    //window.location.href = "login.php";
+    window.location.href = "<?php echo $redirect; ?>";
 });
 </script>
 <?php endif; ?>
