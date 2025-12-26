@@ -17,7 +17,7 @@ $current = basename($_SERVER['PHP_SELF']);
 $adminName = $_SESSION['nama'] ?? 'Admin';
 
 /* BASE URL ROOT */
-$baseUrl = "/PemrogramanWeb_2/yogyastay/YogyaStay-WebAkomodasi";
+$baseUrl = "/UAS/YogyaStay-WebAkomodasi";
 
 /* BASE URL ADMIN */
 $baseAdmin = $baseUrl . "/admin";

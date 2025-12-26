@@ -15,7 +15,7 @@
     /* WRAPPER */
     .yst-footer {
         position: relative;
-        background: url("../assets/img/footer.jpg") center/cover no-repeat;
+        background: url("../assets/img/footer2.jpg") center/cover no-repeat;
         padding: 70px 70px 40px;
         color: white;
     }

@@ -51,6 +51,8 @@ include 'header.php';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 
     <style>
         * {
@@ -378,6 +380,345 @@ include 'header.php';
             font-size: 18px;
         }
 
+  /* PENGINAPAN SECTION */
+.penginapan-section {
+    max-width: 1400px;
+    margin: 60px auto;
+    padding: 0 60px;
+}
+
+/* Ganti header dengan section-header */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.section-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+}
+
+/* Tombol lihat semua baru - update warna teks */
+.view-all {
+    display: inline-flex;
+    align-items: center;
+    background-color: #6E88C0;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600; /* Lebih bold */
+    transition: background 0.3s;
+}
+
+.view-all:after {
+    content: "→";
+    margin-left: 8px;
+    font-size: 16px;
+}
+
+.view-all:hover {
+    background-color: #5A75B0;
+    text-decoration: none;
+    color: white;
+}
+
+/* Tab kabupaten styling */
+.location-filter {
+    display: flex;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 25px;
+    overflow-x: auto;
+    gap: 0;
+    padding-bottom: 0;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+}
+
+.location-filter::-webkit-scrollbar {
+    display: none;
+}
+
+.filter-btn {
+    background: none;
+    border: none;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.2s;
+    position: relative;
+    white-space: nowrap;
+    font-weight: 500;
+    border-radius: 0;
+}
+
+.filter-btn:hover {
+    color: #4A90E2;
+}
+
+.filter-btn.active {
+    background-color: transparent;
+    color: #4A90E2;
+    font-weight: 600;
+}
+
+.filter-btn.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #4A90E2;
+}
+
+
+.filter-btn:not(:first-child):hover {
+    color: #4A90E2;
+}
+
+.filter-btn.active:not(:first-child) {
+    background-color: transparent;
+    color: #4A90E2;
+    font-weight: 600;
+}
+
+.filter-btn.active:not(:first-child)::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #4A90E2;
+}
+
+/* Grid container penginapan */
+.penginapan-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.penginapan-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.penginapan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+/* Badge tipe penginapan */
+.penginapan-type {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 5px 15px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+}
+
+/* Gambar penginapan */
+.penginapan-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Info penginapan */
+.penginapan-info {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.penginapan-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.penginapan-location {
+    display: flex;
+    align-items: center;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.penginapan-location i {
+    margin-right: 5px;
+    color: #888;
+}
+
+/* Fasilitas ikon */
+.penginapan-facilities {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.facility i {
+    color: #999; 
+    font-size: 16px;
+}
+
+/* Rating */
+.penginapan-rating {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.stars {
+    color: #FFD700;
+    margin-right: 5px;
+}
+
+.review-count {
+    font-size: 14px;
+    color: #666;
+}
+
+/* Harga dan tombol */
+.penginapan-price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+.price-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.price-value, .price-label {
+    color: #F44336; 
+    font-weight: 700;
+}
+
+.price-value {
+    font-size: 18px;
+}
+
+.price-label {
+    font-size: 12px;
+    font-weight: normal;
+}
+
+/* Tombol lihat detail */
+.btn-lihat-detail {
+    background-color: #FDD835;
+    color: #000;
+    font-weight: 600;
+    padding: 8px 16px; 
+    border-radius: 30px;
+    text-decoration: none;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.btn-lihat-detail:hover {
+    background-color: #FBC02D;
+}
+
+/* Status messages */
+.loading, .error, .no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 30px 0;
+    color: #666;
+}
+
+.error {
+    color: #F44336;
+}
+
+/* Responsif */
+@media (max-width: 1200px) {
+    .penginapan-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .btn-lihat-detail {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 992px) {
+    .btn-lihat-detail {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .penginapan-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .penginapan-section {
+        padding: 0 20px;
+        margin: 40px auto 60px;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .penginapan-name {
+        font-size: 16px;
+    }
+    
+    .price-value {
+        font-size: 16px;
+    }
+    
+    .btn-lihat-detail {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 500px) {
+    .penginapan-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-lihat-detail {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+}
+
+
         /* RESPONSIVE */
         @media (max-width: 768px) {
             .search-form {
@@ -468,52 +809,8 @@ include 'header.php';
             font-size: 16px;
             line-height: 1.6;
         }
+
         
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 30px;
-        }
-        
-        .feature-card {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            text-align: center;
-            transition: all 0.3s ease;
-            border-top: 4px solid transparent;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            border-top-color: #E8D06F;
-        }
-        
-        .feature-icon {
-            font-size: 56px;
-            margin-bottom: 20px;
-            display: inline-block;
-            transition: transform 0.3s ease;
-        }
-        
-        .feature-card:hover .feature-icon {
-            transform: scale(1.1);
-        }
-        
-        .feature-card h3 {
-            color: #8B9DC3;
-            margin-bottom: 15px;
-            font-size: 22px;
-            font-weight: 700;
-        }
-        
-        .feature-card p {
-            color: #666;
-            line-height: 1.6;
-            font-size: 15px;
-        }
 
         /* ARTIKEL SECTION */
         .artikel-section {
@@ -543,7 +840,7 @@ include 'header.php';
             background: linear-gradient(135deg, #8B9DC3 0%, #7A8DB5 100%);
             color: white;
             text-decoration: none;
-            border-radius: 12px;
+            border-radius: 50px;
             font-size: 15px;
             font-weight: 600;
             transition: all 0.3s ease;
@@ -815,6 +1112,321 @@ include 'header.php';
                 line-height: 1.55;
             }
         }
+
+        /* ========= PROMO SECTION ========= */
+.promo-section {
+    max-width: 1400px;
+    margin: 40px auto 60px;
+    padding: 0 40px;
+}
+
+.promo-container {
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    border: none;
+}
+
+.promo-header {
+    margin-bottom: 30px;
+}
+
+.promo-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2B2B2B;
+    text-align: center;
+    margin: 0;
+}
+
+.promo-carousel {
+    position: relative;
+    z-index: 20;
+    overflow: visible;
+}
+
+.promo-track-wrapper {
+    overflow: hidden;
+    border-radius: 16px;
+}
+
+.promo-track {
+    display: flex;
+    gap: 20px;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.promo-card {
+    position: relative;
+    min-width: calc(33.333% - 14px);
+    aspect-ratio: 16/9;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.promo-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+}
+
+.promo-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+
+.promo-card:hover img {
+    transform: scale(1.1);
+}
+
+.promo-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #F5A742;
+    z-index: 3;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.promo-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to top,
+        rgba(0,0,0,0.85) 0%,
+        rgba(0,0,0,0.4) 50%,
+        transparent 100%
+    );
+    display: flex;
+    align-items: flex-end;
+    padding: 25px;
+    z-index: 2;
+}
+
+.promo-content {
+    color: white;
+    width: 100%;
+}
+
+.promo-event {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.promo-desc {
+    font-size: 14px;
+    margin-bottom: 8px;
+    opacity: 0.95;
+}
+
+.promo-discount {
+    font-size: 42px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 5px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 4px 12px rgba(255,215,0,0.4);
+}
+
+.promo-label {
+    display: inline-block;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.promo-terms {
+    font-size: 11px;
+    opacity: 0.8;
+    margin-top: 8px;
+}
+
+/* Navigation Buttons */
+.promo-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    color: #2B2B2B;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+
+.promo-nav:hover {
+    background: #F2D965;
+    color: white;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 6px 20px rgba(242,217,101,0.4);
+}
+
+.promo-prev {
+    left: -25px;
+}
+
+.promo-next {
+    right: -25px;
+}
+
+/* Dots Indicator */
+.promo-dots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.promo-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ddd;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.promo-dot.active {
+    background: #F2D965;
+    width: 30px;
+    border-radius: 5px;
+}
+
+/* ========= RESPONSIVE ========= */
+@media (max-width: 1200px) {
+    .promo-card {
+        min-width: calc(50% - 10px);
+    }
+}
+
+@media (max-width: 768px) {
+    .promo-section {
+        padding: 0 20px;
+        margin: -30px auto 40px;
+    }
+
+    .promo-container {
+        padding: 25px 20px;
+    }
+
+    .promo-title {
+        font-size: 18px;
+    }
+
+    .promo-card {
+        min-width: 100%;
+    }
+
+    .promo-nav {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+
+    .promo-prev {
+        left: -15px;
+    }
+
+    .promo-next {
+        right: -15px;
+    }
+
+    .promo-event {
+        font-size: 16px;
+    }
+
+    .promo-discount {
+        font-size: 32px;
+    }
+
+    .promo-overlay {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .promo-section {
+        margin: -20px auto 30px;
+        padding: 0 15px;
+    }
+
+    .promo-container {
+        padding: 20px 15px;
+        border-radius: 16px;
+    }
+
+    .promo-title {
+        font-size: 16px;
+    }
+
+    .promo-nav {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+
+    .promo-prev {
+        left: -10px;
+    }
+
+    .promo-next {
+        right: -10px;
+    }
+
+    .promo-badge {
+        font-size: 11px;
+        padding: 6px 12px;
+        top: 10px;
+        right: 10px;
+    }
+
+    .promo-event {
+        font-size: 14px;
+    }
+
+    .promo-discount {
+        font-size: 28px;
+    }
+
+    .promo-label {
+        font-size: 14px;
+    }
+
+    .promo-terms {
+        font-size: 10px;
+    }
+}
     </style>
 </head>
 <body>
@@ -939,33 +1551,130 @@ include 'header.php';
     </section>
 
     <div class="content">
-        <?php if ($is_logged_in): ?>
-            <div class="welcome-message">
-                <h2>Halo, <?php echo htmlspecialchars($user_name); ?>! 👋</h2>
-                <p>Selamat datang kembali di YogyaStay. Siap merencanakan petualangan Anda berikutnya?</p>
-            </div>
-        <?php endif; ?>
-        
-        <div class="features">
-            <div class="feature-card">
-                <div class="feature-icon">🏨</div>
-                <h3>Penginapan Berkualitas</h3>
-                <p>Berbagai pilihan penginapan dengan fasilitas terbaik dan pelayanan maksimal untuk kenyamanan Anda</p>
+    
+        <!-- Bagian Penginapan di JogjaStay -->
+        <section class="penginapan-section container">
+            <div class="section-header">
+                <h2>Top Penginapan di YogyaStay</h2>
+                <a href="penginapan.php" class="view-all" id="view-all-link">Lihat Semua</a>
             </div>
             
-            <div class="feature-card">
-                <div class="feature-icon">💰</div>
-                <h3>Harga Terjangkau</h3>
-                <p>Dapatkan penawaran terbaik dengan harga kompetitif yang sesuai dengan budget liburan Anda</p>
+            <!-- Filter Kabupaten -->
+            <div class="location-filter">
+                <button class="filter-btn active" data-kabupaten="all">Semua</button>
+                <button class="filter-btn" data-kabupaten="1">Kota Yogyakarta</button>
+                <button class="filter-btn" data-kabupaten="2">Kabupaten Sleman</button>
+                <button class="filter-btn" data-kabupaten="3">Kabupaten Bantul</button>
+                <button class="filter-btn" data-kabupaten="4">Kabupaten Kulon Progo</button>
+                <button class="filter-btn" data-kabupaten="5">Kabupaten Gunungkidul</button>
             </div>
             
-            <div class="feature-card">
-                <div class="feature-icon">📍</div>
-                <h3>Lokasi Strategis</h3>
-                <p>Dekat dengan destinasi wisata populer di Yogyakarta dan akses mudah ke berbagai tempat menarik</p>
+            <!-- Penginapan Cards -->
+            <div class="penginapan-container">
             </div>
-        </div>
+        </section>
 
+        
+        <!-- ========= PROMO BANNER SECTION ========= -->
+        <section class="promo-section">
+            <div class="promo-container">
+                <div class="promo-header">
+                    <h2 class="promo-title">Jangan sampai kelewatan promo berikut!</h2>
+                </div>
+                
+                <div class="promo-carousel">
+                    <button class="promo-nav promo-prev" aria-label="Previous">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    
+                    <div class="promo-track-wrapper">
+                        <div class="promo-track">
+                            <!-- Promo 1 -->
+                            <div class="promo-card">
+                                <div class="promo-badge">🎊 Tahun Baru</div>
+                                <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80" alt="Promo Tahun Baru">
+                                <div class="promo-overlay">
+                                    <div class="promo-content">
+                                        <h3 class="promo-event">12.12 Pesta Meriah</h3>
+                                        <p class="promo-desc">Extra Cashback hingga</p>
+                                        <div class="promo-discount">15%</div>
+                                        <span class="promo-label">diskon</span>
+                                        <p class="promo-terms">*Syarat & Ketentuan Berlaku</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Promo 2 -->
+                            <div class="promo-card">
+                                <div class="promo-badge">✨ Spesial</div>
+                                <img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80" alt="Promo Spesial">
+                                <div class="promo-overlay">
+                                    <div class="promo-content">
+                                        <h3 class="promo-event">Temukan semua</h3>
+                                        <p class="promo-desc">promo Anda</p>
+                                        <div class="promo-discount">di sini!</div>
+                                        <p class="promo-terms">Nikmati penawaran terbaik</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Promo 3 -->
+                            <div class="promo-card">
+                                <div class="promo-badge">🏖️ Liburan</div>
+                                <img src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=80" alt="Promo Liburan">
+                                <div class="promo-overlay">
+                                    <div class="promo-content">
+                                        <h3 class="promo-event">🌴 MID HAPPY WEEK 🌴</h3>
+                                        <p class="promo-desc">Diskon hingga</p>
+                                        <div class="promo-discount">15%</div>
+                                        <span class="promo-label">Paket Liburan</span>
+                                        <p class="promo-terms">*Booking sekarang!</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Promo 4 -->
+                            <div class="promo-card">
+                                <div class="promo-badge">🔥 Hot Deal</div>
+                                <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80" alt="Promo Hot Deal">
+                                <div class="promo-overlay">
+                                    <div class="promo-content">
+                                        <h3 class="promo-event">Flash Sale!</h3>
+                                        <p class="promo-desc">Hemat hingga</p>
+                                        <div class="promo-discount">20%</div>
+                                        <span class="promo-label">Untuk hari ini</span>
+                                        <p class="promo-terms">*Terbatas!</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Promo 5 -->
+                            <div class="promo-card">
+                                <div class="promo-badge">💎 Premium</div>
+                                <img src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80" alt="Promo Premium">
+                                <div class="promo-overlay">
+                                    <div class="promo-content">
+                                        <h3 class="promo-event">Member Exclusive</h3>
+                                        <p class="promo-desc">Cashback ekstra</p>
+                                        <div class="promo-discount">25%</div>
+                                        <span class="promo-label">Member VIP</span>
+                                        <p class="promo-terms">*Khusus member</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="promo-nav promo-next" aria-label="Next">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- Dots Indicator -->
+                <div class="promo-dots"></div>
+            </div>
+        </section>
+                                                    
         <!-- ARTIKEL SECTION -->
         <div class="artikel-section">
             <div class="artikel-header">
@@ -1102,6 +1811,7 @@ document.getElementById('searchForm').addEventListener('submit', function (e) {
     }
 });
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 // Guest Selector
@@ -1189,7 +1899,7 @@ const tomorrow = new Date(today);
 tomorrow.setDate(tomorrow.getDate() + 1);
 
 const checkinPicker = flatpickr("#checkin", {
-    dateFormat: "d/m/Y",
+    dateFormat: "Y-m-d",  
     minDate: "today",
     onChange: function(selectedDates, dateStr, instance) {
         checkoutPicker.set('minDate', selectedDates[0] || today);
@@ -1204,9 +1914,10 @@ const checkinPicker = flatpickr("#checkin", {
 });
 
 const checkoutPicker = flatpickr("#checkout", {
-    dateFormat: "d/m/Y",
+    dateFormat: "Y-m-d", 
     minDate: tomorrow
 });
+
 
 // Load Kabupaten with AJAX
 fetch('get_kabupaten.php')
@@ -1273,6 +1984,277 @@ document.querySelectorAll(".faq-item").forEach(item => {
 });
 
 updateButtons();
+</script>
+
+<!-- Script untuk fitur penginapan di JogjaStay -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Tambahkan pengujian apakah elemen penginapan ada sebelum menjalankan kode
+    if (document.querySelector('.penginapan-container')) {
+        loadPenginapan('all');
+        
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const viewAllLink = document.getElementById('view-all-link');
+        
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const kabupatenId = this.getAttribute('data-kabupaten');
+                
+                // Hapus kelas active dari semua tombol
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                
+                // Tambahkan kelas active ke tombol yang diklik
+                this.classList.add('active');
+                
+                // Load penginapan berdasarkan kabupaten
+                loadPenginapan(kabupatenId);
+                
+                // ✅ UPDATE LINK "LIHAT SEMUA" BERDASARKAN TAB YANG AKTIF
+                if (kabupatenId === 'all') {
+                    viewAllLink.href = 'penginapan.php';
+                } else {
+                    viewAllLink.href = `penginapan.php?kabupaten=${kabupatenId}`;
+                }
+            });
+        });
+    }
+});
+
+function loadPenginapan(kabupatenId) {
+    const penginapanContainer = document.querySelector('.penginapan-container');
+    if (!penginapanContainer) return;
+    
+    penginapanContainer.innerHTML = '<div class="loading">Memuat data penginapan...</div>';
+    
+    fetch(`get_penginapan.php?kabupaten=${kabupatenId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+                penginapanContainer.innerHTML = '';
+                
+                // Batasi penginapan yang ditampilkan menjadi 4
+                const penginapanToShow = data.slice(0, 4);
+                
+                // Render setiap penginapan
+                penginapanToShow.forEach(item => {
+                    penginapanContainer.innerHTML += createPenginapanCard(item);
+                });
+            } else {
+                penginapanContainer.innerHTML = '<div class="no-results">Tidak ada penginapan ditemukan di wilayah ini</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            penginapanContainer.innerHTML = '<div class="error">Terjadi kesalahan saat memuat data</div>';
+        });
+}
+
+function createPenginapanCard(penginapan) {
+    // Hitung rating dalam bentuk bintang
+    const rating = parseFloat(penginapan.rating) || 0;
+    let starsHTML = '<i class="fas fa-star"></i>'; 
+    
+    // Format fasilitas sebagai ikon
+    const fasilitasHTML = `
+        <i class="fas fa-wifi"></i>
+        <i class="fas fa-coffee"></i>
+        <i class="fas fa-swimming-pool"></i>
+    `;
+    
+    // Format harga
+    const harga = parseInt(penginapan.harga_mulai) || 0;
+    const formattedHarga = new Intl.NumberFormat('id-ID').format(harga);
+    
+    return `
+        <div class="penginapan-card">
+            <div style="position: relative;">
+                <img src="../${penginapan.gambar}" alt="${penginapan.nama_penginapan}" class="penginapan-image">
+                <div class="penginapan-type">${penginapan.tipe_penginapan || 'Villa'}</div>
+            </div>
+            <div class="penginapan-info">
+                <h3 class="penginapan-name">${penginapan.nama_penginapan}</h3>
+                <div class="penginapan-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    ${penginapan.nama_kecamatan}, ${penginapan.nama_kabupaten}
+                </div>
+                <div class="penginapan-facilities">
+                    <div class="facility"><i class="fas fa-wifi"></i></div>
+                    <div class="facility"><i class="fas fa-coffee"></i></div>
+                    <div class="facility"><i class="fas fa-swimming-pool"></i></div>
+                </div>
+                <hr>
+                <div class="penginapan-rating">
+                    <div class="stars">${starsHTML}</div>
+                    <strong>${rating.toFixed(1)}</strong> 
+                    <span class="review-count">(${penginapan.jumlah_review || 0})</span>
+                </div>
+                <div class="penginapan-price">
+                    <div class="price-info">
+                        <span class="price-value">Rp ${formattedHarga}</span>
+                        <span class="price-label">/malam</span>
+                    </div>
+                    <a href="detail.php?id=${penginapan.id_penginapan}" class="btn-lihat-detail">Lihat Detail</a>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ========= PROMO CAROUSEL =========
+(function() {
+    const track = document.querySelector('.promo-track');
+    const cards = document.querySelectorAll('.promo-card');
+    const prevBtn = document.querySelector('.promo-prev');
+    const nextBtn = document.querySelector('.promo-next');
+    const dotsContainer = document.querySelector('.promo-dots');
+    
+    if (!track || cards.length === 0) return;
+    
+    let currentIndex = 0;
+    let cardsPerView = 3;
+    let autoplayInterval;
+    
+    // Update cards per view based on screen size
+    function updateCardsPerView() {
+        const width = window.innerWidth;
+        if (width <= 768) {
+            cardsPerView = 1;
+        } else if (width <= 1200) {
+            cardsPerView = 2;
+        } else {
+            cardsPerView = 3;
+        }
+    }
+    
+    // Calculate total slides
+    function getTotalSlides() {
+        return Math.ceil(cards.length / cardsPerView);
+    }
+    
+    // Create dots
+    function createDots() {
+        dotsContainer.innerHTML = '';
+        const totalSlides = getTotalSlides();
+        
+        for (let i = 0; i < totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.classList.add('promo-dot');
+            if (i === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => goToSlide(i));
+            dotsContainer.appendChild(dot);
+        }
+    }
+    
+    // Update dots
+    function updateDots() {
+        const dots = document.querySelectorAll('.promo-dot');
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentIndex);
+        });
+    }
+    
+    // Go to specific slide
+    function goToSlide(index) {
+        const totalSlides = getTotalSlides();
+        currentIndex = Math.max(0, Math.min(index, totalSlides - 1));
+        
+        const cardWidth = cards[0].offsetWidth;
+        const gap = 20;
+        const offset = -(currentIndex * cardsPerView * (cardWidth + gap));
+        
+        track.style.transform = `translateX(${offset}px)`;
+        updateDots();
+    }
+    
+    // Next slide
+    function nextSlide() {
+        const totalSlides = getTotalSlides();
+        if (currentIndex < totalSlides - 1) {
+            goToSlide(currentIndex + 1);
+        } else {
+            goToSlide(0); // Loop back to first
+        }
+    }
+    
+    // Previous slide
+    function prevSlide() {
+        if (currentIndex > 0) {
+            goToSlide(currentIndex - 1);
+        } else {
+            goToSlide(getTotalSlides() - 1); // Loop to last
+        }
+    }
+    
+    // Autoplay
+    function startAutoplay() {
+        stopAutoplay();
+        autoplayInterval = setInterval(nextSlide, 4000);
+    }
+    
+    function stopAutoplay() {
+        if (autoplayInterval) {
+            clearInterval(autoplayInterval);
+        }
+    }
+    
+    // Event listeners
+    nextBtn.addEventListener('click', () => {
+        nextSlide();
+        stopAutoplay();
+        startAutoplay();
+    });
+    
+    prevBtn.addEventListener('click', () => {
+        prevSlide();
+        stopAutoplay();
+        startAutoplay();
+    });
+    
+    // Pause on hover
+    track.addEventListener('mouseenter', stopAutoplay);
+    track.addEventListener('mouseleave', startAutoplay);
+    
+    // Touch/Swipe support
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    track.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+        stopAutoplay();
+    });
+    
+    track.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+        startAutoplay();
+    });
+    
+    function handleSwipe() {
+        if (touchEndX < touchStartX - 50) nextSlide();
+        if (touchEndX > touchStartX + 50) prevSlide();
+    }
+    
+    // Resize handler
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            updateCardsPerView();
+            createDots();
+            goToSlide(0);
+        }, 250);
+    });
+    
+    // Initialize
+    updateCardsPerView();
+    createDots();
+    startAutoplay();
+})();
 </script>
 
 <?php include 'footer.php'; ?>

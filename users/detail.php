@@ -31,7 +31,7 @@ if (!$result || mysqli_num_rows($result) == 0) {
 $penginapan = mysqli_fetch_assoc($result);
 
 // Query untuk mengambil tipe kamar
-$sql_kamar = "SELECT * FROM tipe_kamar WHERE id_penginapan = $id_penginapan ORDER BY harga ASC";
+$sql_kamar = "SELECT * FROM tipe_kamar WHERE id_penginapan = $id_penginapan ORDER BY harga_per_malam ASC";
 $result_kamar = mysqli_query($conn, $sql_kamar);
 
 // Include header
@@ -621,7 +621,7 @@ require_once 'header.php';
                         <div class="room-price-box">
                             <div>
                                 <div class="room-price-label">Mulai dari</div>
-                                <div class="room-price">Rp <?= number_format($kamar['harga'], 0, ',', '.') ?></div>
+                                <div class="room-price">Rp <?= number_format($kamar['harga_per'], 0, ',', '.') ?></div>
                             </div>
                         </div>
                         <button class="btn-book-room" onclick="window.location.href='booking.php?id_penginapan=<?= $id_penginapan ?>&id_tipe_kamar=<?= $kamar['id_tipe_kamar'] ?>&checkin=&checkout=&jumlah_kamar=1'">Pesan</button>
