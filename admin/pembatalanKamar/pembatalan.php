@@ -11,28 +11,46 @@ if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] !== 'admin') {
     exit;
 }
 
-// PAGINATION 
-$logs_per_page = 15;
+// PAGINATION
+$per_page = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$offset = ($page - 1) * $logs_per_page;
+$offset = ($page - 1) * $per_page;
 
-// QUERY LOG 
+// QUERY PEMBATALAN
 $query = mysqli_query($conn, "
-    SELECT l.*, u.nama AS admin_name, u.email AS admin_email
-    FROM log_aktivitas_admin l
-    LEFT JOIN users u ON l.id_admin = u.id_user
-    ORDER BY l.created_at DESC
-    LIMIT $logs_per_page OFFSET $offset
+    SELECT 
+        b.id_booking,
+        b.kode_booking,
+        b.tanggal_checkin,
+        b.tanggal_checkout,
+        b.status_reservasi,
+        b.created_at,
+        pen.nama_penginapan,
+        u.nama AS nama_pelanggan,
+        u.email AS email_pelanggan,
+        p.total_bayar,
+        p.status_pembayaran,
+        pb.id_pembatalan,
+        pb.alasan,
+        pb.created_at AS tanggal_batal
+    FROM booking b
+    JOIN penginapan pen ON b.id_penginapan = pen.id_penginapan
+    JOIN users u ON b.id_user = u.id_user
+    LEFT JOIN pembayaran p ON b.id_booking = p.id_booking
+    LEFT JOIN pembatalan pb ON b.id_booking = pb.id_booking
+    WHERE b.status_reservasi = 'dibatalkan'
+    ORDER BY pb.created_at DESC, b.created_at DESC
+    LIMIT $per_page OFFSET $offset
 ");
 
-if (!$query) {
-    die("Query Error: " . mysqli_error($conn));
-}
-
-// TOTAL LOG 
-$total_query = mysqli_query($conn, "SELECT COUNT(*) AS total FROM log_aktivitas_admin");
+// TOTAL DATA
+$total_query = mysqli_query($conn, "
+    SELECT COUNT(*) AS total 
+    FROM booking 
+    WHERE status_reservasi = 'dibatalkan'
+");
 $total = mysqli_fetch_assoc($total_query)['total'];
-$total_pages = ceil($total / $logs_per_page);
+$total_pages = ceil($total / $per_page);
 ?>
 
 <!DOCTYPE html>
@@ -40,7 +58,7 @@ $total_pages = ceil($total / $logs_per_page);
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Log Aktivitas Admin - YogyaStay</title>
+<title>Pembatalan Kamar - YogyaStay</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
@@ -82,9 +100,9 @@ body { font-family: 'Poppins', sans-serif; background:#fff7ed; }
 
 h2 { font-size:28px; color:#333; margin:0; }
 
-.log-dashboard { background:#fff; border-radius:20px; padding:30px; box-shadow:0 6px 20px rgba(0,0,0,0.08); overflow-x:auto; }
+.pembatalan-dashboard { background:#fff; border-radius:20px; padding:30px; box-shadow:0 6px 20px rgba(0,0,0,0.08); overflow-x:auto; }
 
-table { width:100%; border-collapse:collapse; min-width:800px; }
+table { width:100%; border-collapse:collapse; min-width:900px; }
 th, td { padding:15px; border-bottom:1px solid #e0e0e0; text-align:left; }
 th { background:#f1f3f6; font-weight:600; color:#555; font-size: 14px; }
 tr:hover { background:#f9f9f9; transition:0.2s; }
@@ -98,20 +116,31 @@ td { font-size: 14px; }
     display: inline-block;
 }
 
-.badge-info { background: #dbeafe; color: #1e40af; }
-.badge-success { background: #d1fae5; color: #065f46; }
-.badge-warning { background: #fef3c7; color: #92400e; }
 .badge-danger { background: #fee2e2; color: #991b1b; }
+.badge-warning { background: #fef3c7; color: #92400e; }
+.badge-success { background: #d1fae5; color: #065f46; }
 
 .pagination { display:flex; flex-wrap:wrap; justify-content:center; margin-top:25px; gap: 5px; }
 .pagination a { padding:10px 16px; border-radius:8px; background:#f8f9fa; color:#555; text-decoration:none; transition:0.3s; font-size:14px; font-weight: 600; }
 .pagination a:hover { background:#fde68a; }
 .pagination a.active { background:#f59e0b; color:#fff; }
 
+.empty-state {
+    text-align: center;
+    padding: 60px 30px;
+    color: #6b7280;
+}
+
+.empty-state i {
+    font-size: 80px;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
 @media(max-width:768px){ 
     .main-content { margin-left:0; padding:20px; } 
     .hamburger { display: flex; }
-    table { font-size: 12px; min-width: 700px; }
+    table { font-size: 12px; min-width: 800px; }
     th, td { padding: 10px 8px; }
 }
 </style>
@@ -130,40 +159,48 @@ if (file_exists('../partials/sidebar.php')) {
             <span class="hamburger" onclick="toggleSidebar()">
                 <i class="fa-solid fa-bars"></i>
             </span>
-            <h2>📋 Log Aktivitas Admin</h2>
+            <h2>🚫 Pembatalan Kamar</h2>
         </div>
     </div>
 
-    <section class="log-dashboard">
+    <section class="pembatalan-dashboard">
+        <?php if(mysqli_num_rows($query) > 0): ?>
         <table>
             <thead>
                 <tr>
-                    <th style="width: 50px;">#</th>
-                    <th>Waktu</th>
-                    <th>Admin</th>
-                    <th>Aktivitas</th>
-                    <th>Deskripsi</th>
+                    <th>#</th>
+                    <th>Kode Booking</th>
+                    <th>Penginapan</th>
+                    <th>Pelanggan</th>
+                    <th>Check-in</th>
+                    <th>Total Bayar</th>
+                    <th>Tanggal Batal</th>
+                    <th>Alasan</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
-                <?php $no = $offset + 1; while($log = mysqli_fetch_assoc($query)): ?>
+                <?php $no = $offset + 1; while($row = mysqli_fetch_assoc($query)): ?>
                 <tr>
                     <td><?= $no++; ?></td>
+                    <td><strong><?= htmlspecialchars($row['kode_booking']); ?></strong></td>
+                    <td><?= htmlspecialchars($row['nama_penginapan']); ?></td>
+                    <td>
+                        <strong><?= htmlspecialchars($row['nama_pelanggan']); ?></strong><br>
+                        <small style="color: #6b7280;"><?= htmlspecialchars($row['email_pelanggan']); ?></small>
+                    </td>
+                    <td style="white-space: nowrap;"><?= date('d M Y', strtotime($row['tanggal_checkin'])); ?></td>
+                    <td>Rp <?= number_format($row['total_bayar'] ?? 0, 0, ',', '.'); ?></td>
                     <td style="white-space: nowrap;">
-                        <i class="far fa-clock" style="color: #6b7280;"></i> 
-                        <?= date('d M Y, H:i', strtotime($log['created_at'])); ?>
+                        <?= $row['tanggal_batal'] ? date('d M Y', strtotime($row['tanggal_batal'])) : '-'; ?>
+                    </td>
+                    <td style="max-width: 250px;">
+                        <?= htmlspecialchars($row['alasan'] ?? 'Tidak ada keterangan'); ?>
                     </td>
                     <td>
-                        <strong><?= htmlspecialchars($log['admin_name'] ?? 'System'); ?></strong><br>
-                        <small style="color: #6b7280;"><?= htmlspecialchars($log['admin_email'] ?? '-'); ?></small>
-                    </td>
-                    <td>
-                        <span class="badge badge-info">
-                            <?= htmlspecialchars($log['aktivitas']); ?>
+                        <span class="badge badge-danger">
+                            Dibatalkan
                         </span>
-                    </td>
-                    <td style="max-width: 400px;">
-                        <?= htmlspecialchars($log['deskripsi']); ?>
                     </td>
                 </tr>
                 <?php endwhile; ?>
@@ -184,6 +221,13 @@ if (file_exists('../partials/sidebar.php')) {
             if($page < $total_pages) echo '<a href="?page='.$total_pages.'">»</a>';
             ?>
         </div>
+        <?php else: ?>
+        <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <h3>Tidak Ada Pembatalan</h3>
+            <p>Saat ini tidak ada pembatalan kamar yang tercatat.</p>
+        </div>
+        <?php endif; ?>
     </section>
 </div>
 
