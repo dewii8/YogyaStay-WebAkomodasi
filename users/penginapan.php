@@ -16,7 +16,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'kecamatan') {
         exit;
     }
     
-    // Langsung tampilkan list kecamatan (tanpa "Pilih Kecamatan" di list)
+    // Langsung tampilkan list kecamatan )
     while ($d = mysqli_fetch_assoc($q)) {
         echo "<option value='{$d['id_kecamatan']}'>{$d['nama_kecamatan']}</option>";
     }
@@ -27,10 +27,15 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'kecamatan') {
 $kabupaten = isset($_GET['kabupaten']) ? mysqli_real_escape_string($conn, $_GET['kabupaten']) : '';
 $kecamatan = isset($_GET['kecamatan']) ? mysqli_real_escape_string($conn, $_GET['kecamatan']) : '';
 $kategori  = isset($_GET['kategori']) ? mysqli_real_escape_string($conn, $_GET['kategori']) : 'semua';
-$harga_min = isset($_GET['harga_min']) ? intval($_GET['harga_min']) : '';
-$harga_max = isset($_GET['harga_max']) ? intval($_GET['harga_max']) : '';
+$harga_min = isset($_GET['harga_min']) && $_GET['harga_min'] !== '' ? intval($_GET['harga_min']) : null;
+$harga_max = isset($_GET['harga_max']) && $_GET['harga_max'] !== '' ? intval($_GET['harga_max']) : null;
 $checkin   = isset($_GET['checkin']) ? mysqli_real_escape_string($conn, $_GET['checkin']) : '';
 $checkout  = isset($_GET['checkout']) ? mysqli_real_escape_string($conn, $_GET['checkout']) : '';
+
+//Handle data tamu dari beranda
+$rooms     = isset($_GET['rooms']) ? intval($_GET['rooms']) : 1;
+$adults    = isset($_GET['adults']) ? intval($_GET['adults']) : 1;
+$children  = isset($_GET['children']) ? intval($_GET['children']) : 0;
 
 // Pagination
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
@@ -54,33 +59,77 @@ if (!empty($kecamatan)) {
     $where_clause .= " AND p.id_kecamatan = '$kecamatan'";
 }
 
-// Filter berdasarkan tipe_penginapan (BUKAN kategori)
+// Filter berdasarkan tipe_penginapan 
 if ($kategori !== 'semua') {
     $where_clause .= " AND LOWER(p.tipe_penginapan) = LOWER('$kategori')";
 }
 
 // Filter berdasarkan rentang harga
-if (!empty($harga_min) && !empty($harga_max)) {
+if ($harga_min !== null && $harga_max !== null) {
     $where_clause .= " AND p.harga_mulai BETWEEN $harga_min AND $harga_max";
 }
 
-// Count total results untuk pagination (TANPA ORDER BY)
-$count_sql = "SELECT COUNT(*) as total 
+// Filter berdasarkan kapasitas kamar & orang
+$having_clause = "";
+if ($rooms > 0 || $adults > 0 || $children > 0) {
+    $total_guests = $adults + $children;
+    
+    $having_conditions = [];
+    
+    if ($rooms > 0) {
+        $having_conditions[] = "SUM(tk.jumlah_kamar) >= $rooms";
+    }
+    
+    if ($total_guests > 0) {
+        $having_conditions[] = "MAX(tk.kapasitas_orang) >= $total_guests";
+    }
+    
+    if (!empty($having_conditions)) {
+        $having_clause = " HAVING " . implode(" AND ", $having_conditions);
+    }
+}
+
+// Count total results untuk pagination
+$count_sql = "SELECT COUNT(DISTINCT p.id_penginapan) as total 
               FROM penginapan p
               JOIN kecamatan kc ON p.id_kecamatan = kc.id_kecamatan
+              LEFT JOIN tipe_kamar tk ON p.id_penginapan = tk.id_penginapan
               $where_clause";
+
+if ($having_clause) {
+    $count_sql = "SELECT COUNT(*) as total FROM (
+                    SELECT p.id_penginapan
+                    FROM penginapan p
+                    JOIN kecamatan kc ON p.id_kecamatan = kc.id_kecamatan
+                    LEFT JOIN tipe_kamar tk ON p.id_penginapan = tk.id_penginapan
+                    $where_clause
+                    GROUP BY p.id_penginapan
+                    $having_clause
+                  ) as filtered";
+}
+
 $count_result = mysqli_query($conn, $count_sql);
 $count_row = mysqli_fetch_assoc($count_result);
 $total_results = $count_row['total'];
 $total_pages = ceil($total_results / $items_per_page);
 
-// Main query dengan ORDER BY dan LIMIT
-$sql = "SELECT p.*, kc.nama_kecamatan
+// Main query dengan JOIN ke tipe_kamar
+$sql = "SELECT p.*, kc.nama_kecamatan,
+        GROUP_CONCAT(DISTINCT tk.nama_tipe SEPARATOR ', ') as tipe_kamar_list,
+        SUM(tk.jumlah_kamar) as total_kamar,
+        MAX(tk.kapasitas_orang) as max_kapasitas
         FROM penginapan p
         JOIN kecamatan kc ON p.id_kecamatan = kc.id_kecamatan
-        $where_clause";
+        LEFT JOIN tipe_kamar tk ON p.id_penginapan = tk.id_penginapan
+        $where_clause
+        GROUP BY p.id_penginapan";
 
-// Cek apakah kolom rating ada, jika tidak gunakan id_penginapan
+// Tambahkan HAVING jika ada filter kapasitas
+if ($having_clause) {
+    $sql .= $having_clause;
+}
+
+// Cek apakah kolom rating ada
 $check_column = mysqli_query($conn, "SHOW COLUMNS FROM penginapan LIKE 'rating'");
 if (mysqli_num_rows($check_column) > 0) {
     $sql .= " ORDER BY p.rating DESC";
@@ -482,33 +531,12 @@ require_once 'header.php';
     box-shadow: 0 3px 10px rgba(245, 167, 66, 0.4);
 }
 
-.price-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: #888;
-    margin-top: 10px;
-}
 
-.price-values {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-}
-
-.price-value {
-    background: #f3f4f6;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #333;
-}
 
 .price-manual-inputs {
     display: flex;
     gap: 10px;
-    margin-top: 15px;
+    margin-bottom: 20px; 
 }
 
 .price-manual-input {
@@ -525,10 +553,23 @@ require_once 'header.php';
 
 .price-manual-input input {
     width: 100%;
-    padding: 8px 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 13px;
+    padding: 10px 12px; 
+    border: 2px solid #e5e7eb; 
+    border-radius: 8px; 
+    font-size: 14px; 
+    font-weight: 500; 
+    transition: all 0.3s; 
+}
+
+.price-manual-input input:focus {
+    outline: none;
+    border-color: #f5a742;
+    box-shadow: 0 0 0 3px rgba(245, 167, 66, 0.1);
+}
+
+.price-manual-input input:hover {
+    border-color: #f5a742;
+    background: #fef9e7;
 }
 
 /* ========= CUSTOM CALENDAR ========= */
@@ -1030,37 +1071,296 @@ require_once 'header.php';
     color: #666;
     font-size: 14px;
 }
+/* ========= RESPONSIVE DESIGN ========= */
+@media (max-width: 1024px) {
+    .search-bar {
+        padding: 15px 20px;
+    }
+    
+    .cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
 
 @media (max-width: 768px) {
+    /* Search Bar */
+    .search-container {
+        padding: 0 15px;
+        margin: 20px auto 0;
+    }
+    
     .search-bar {
         flex-direction: column;
         align-items: stretch;
+        padding: 20px;
+        border-radius: 30px;
+    }
+    
+    .search-field {
+        min-width: 100%;
     }
     
     .search-divider {
         display: none;
     }
     
+    .btn-search {
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    /* Guest Dropdown */
+    .guest-dropdown-menu {
+        right: auto;
+        left: 0;
+        min-width: 100%;
+    }
+    
+    /* Main Layout */
+    .container {
+        margin: 20px auto;
+        padding: 0 15px;
+    }
+    
+    .section-title {
+        font-size: 24px;
+    }
+    
+    .section-subtitle {
+        font-size: 14px;
+    }
+    
     .main {
         flex-direction: column;
+        gap: 20px;
     }
     
+    /* Sidebar  */
     .sidebar {
         width: 100%;
+        position: static;
+        order: -1;
+        margin-bottom: 20px;
+        margin-top: 0;
     }
     
+    /* Cards */
     .cards {
         grid-template-columns: 1fr;
+        order: 0; 
     }
     
+    .card-image {
+        height: 180px;
+    }
+    
+    .card-title {
+        font-size: 16px;
+    }
+    
+    /* Pagination */
     .pagination {
         flex-wrap: wrap;
+        gap: 5px;
     }
     
     .page-link {
         min-width: 36px;
         height: 36px;
         font-size: 13px;
+        padding: 6px 10px;
+    }
+    
+    .pagination-info {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Search Bar */
+    .search-bar {
+        padding: 15px;
+        gap: 10px;
+    }
+    
+    .search-field label {
+        font-size: 11px;
+    }
+    
+    .search-field select,
+    .search-field input {
+        font-size: 13px;
+    }
+    
+    .date-input-custom {
+        padding: 10px 12px;
+    }
+    
+    .date-label {
+        font-size: 10px;
+    }
+    
+    .date-value {
+        font-size: 13px;
+    }
+    
+    .guest-display {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+    
+    .btn-search {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    
+    /* Guest Dropdown */
+    .guest-dropdown-menu {
+        min-width: 280px;
+        padding: 15px;
+    }
+    
+    .guest-row {
+        padding: 12px;
+    }
+    
+    .guest-label strong {
+        font-size: 13px;
+    }
+    
+    .guest-label small {
+        font-size: 11px;
+    }
+    
+    .guest-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+    }
+    
+    .guest-count {
+        min-width: 35px;
+        font-size: 15px;
+    }
+    
+    /* Header */
+    .section-title {
+        font-size: 20px;
+    }
+    
+    .section-subtitle {
+        font-size: 13px;
+    }
+    
+    .results-count {
+        font-size: 12px;
+    }
+    
+    /* Sidebar */
+    .sidebar {
+        padding: 20px 15px;
+        margin-bottom: 15px;
+    }
+    
+    .sidebar h3 {
+        font-size: 18px;
+    }
+    
+    .filter-section h4 {
+        font-size: 15px;
+    }
+    
+    .filter-option label {
+        font-size: 13px;
+    }
+    
+    /* Cards */
+    .card-body {
+        padding: 15px;
+    }
+    
+    .card-title {
+        font-size: 15px;
+    }
+    
+    .card-location {
+        font-size: 13px;
+    }
+    
+    .amenity-icon {
+        font-size: 16px;
+    }
+    
+    .rating-text {
+        font-size: 13px;
+    }
+    
+    .price {
+        font-size: 16px;
+    }
+    
+    .price-period {
+        font-size: 12px;
+    }
+    
+    .btn-detail {
+        padding: 10px;
+        font-size: 13px;
+    }
+    
+    /* Pagination */
+    .page-link {
+        min-width: 32px;
+        height: 32px;
+        font-size: 12px;
+        padding: 5px 8px;
+    }
+    
+    .page-link.prev-next {
+        font-size: 16px;
+    }
+    
+    /* Price Slider */
+    .price-values {
+        flex-direction: column;
+        gap: 5px;
+        align-items: flex-start;
+    }
+    
+    .price-value {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+    
+    .price-manual-input label {
+        font-size: 10px;
+    }
+    
+    .price-manual-input input {
+        font-size: 12px;
+        padding: 6px 8px;
+    }
+}
+
+/* Landscape Mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .card-image {
+        height: 150px;
+    }
+}
+
+/* Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .sidebar {
+        width: 250px;
     }
 }
 </style>
@@ -1092,8 +1392,11 @@ require_once 'header.php';
                 <select name="kecamatan" id="kecamatan">
                     <?php
                     if ($kabupaten) {
-                        // Jika sudah pilih kabupaten: langsung list kecamatan (tanpa "Pilih Kecamatan" di list)
-                        $first = true;
+                        // Jika sudah pilih kabupaten: tampilkan "Semua Kecamatan" dulu
+                        $sel_semua = ($kecamatan == '') ? 'selected' : '';
+                        echo "<option value='' $sel_semua>Semua Kecamatan</option>";
+                        
+                        // Lalu tampilkan list kecamatan
                         $qkc = mysqli_query($conn,"SELECT * FROM kecamatan WHERE id_kabupaten='$kabupaten'");
                         if ($qkc) {
                             while($kc=mysqli_fetch_assoc($qkc)){
@@ -1102,7 +1405,7 @@ require_once 'header.php';
                             }
                         }
                     } else {
-                        // Kondisi awal: tampilkan "Pilih Kecamatan" sebagai placeholder
+                        // Kondisi awal: belum pilih kabupaten
                         echo "<option value='' selected disabled>Pilih Kecamatan</option>";
                     }
                     ?>
@@ -1183,6 +1486,10 @@ require_once 'header.php';
                 </div>
             </div>
 
+            <input type="hidden" name="rooms" id="rooms-input" value="<?= $rooms ?>">
+            <input type="hidden" name="adults" id="adults-input" value="<?= $adults ?>">
+            <input type="hidden" name="children" id="children-input" value="<?= $children ?>">
+
             <button type="submit" class="btn-search">Cari</button>
         </div>
     </form>
@@ -1255,34 +1562,26 @@ require_once 'header.php';
                 <div class="filter-section">
                     <h4>Rentang Harga</h4>
                     <div class="price-slider-container">
-                        <div class="price-values">
-                            <span class="price-value" id="min-price-display">Rp 0</span>
-                            <span class="price-value" id="max-price-display">Rp 50.000.000</span>
+                        <!-- INPUT MANUAL -->
+                        <div class="price-manual-inputs">
+                            <div class="price-manual-input">
+                                <label>Harga Minimum</label>
+                                <input type="number" name="harga_min" id="harga_min" placeholder="0" value="<?= $harga_min ?>" step="50000" min="0" max="5000000">
+                            </div>
+                            <div class="price-manual-input">
+                                <label>Harga Maksimum</label>
+                                <input type="number" name="harga_max" id="harga_max" placeholder="5000000" value="<?= $harga_max ?>" step="50000" min="0" max="5000000">
+                            </div>
                         </div>
                         
+                        <!-- SLIDER DI BAWAH -->
                         <div class="price-slider-wrapper">
                             <div class="price-slider-track" id="price-track"></div>
                         </div>
                         
                         <div class="price-slider">
-                            <input type="range" id="min-range" min="0" max="50000000" step="100000" value="<?= $harga_min ?: 0 ?>">
-                            <input type="range" id="max-range" min="0" max="50000000" step="100000" value="<?= $harga_max ?: 50000000 ?>">
-                        </div>
-                        
-                        <div class="price-labels">
-                            <span>Rp 0</span>
-                            <span>Rp 50jt</span>
-                        </div>
-                        
-                        <div class="price-manual-inputs">
-                            <div class="price-manual-input">
-                                <label>Harga Minimum</label>
-                                <input type="number" name="harga_min" id="harga_min" placeholder="0" value="<?= $harga_min ?>" step="100000">
-                            </div>
-                            <div class="price-manual-input">
-                                <label>Harga Maksimum</label>
-                                <input type="number" name="harga_max" id="harga_max" placeholder="50000000" value="<?= $harga_max ?>" step="100000">
-                            </div>
+                            <input type="range" id="min-range" min="0" max="5000000" step="50000" value="<?= $harga_min ?: 0 ?>">
+                            <input type="range" id="max-range" min="0" max="5000000" step="50000" value="<?= $harga_max ?: 5000000 ?>">
                         </div>
                     </div>
                 </div>
@@ -1292,6 +1591,9 @@ require_once 'header.php';
                 <input type="hidden" name="kecamatan" value="<?= $kecamatan ?>">
                 <input type="hidden" name="checkin" value="<?= $checkin ?>">
                 <input type="hidden" name="checkout" value="<?= $checkout ?>">
+                <input type="hidden" name="rooms" value="<?= $rooms ?>">
+                <input type="hidden" name="adults" value="<?= $adults ?>">
+                <input type="hidden" name="children" value="<?= $children ?>">
 
                 <button type="submit" class="btn-filter">Terapkan Filter</button>
             </form>
@@ -1353,8 +1655,8 @@ require_once 'header.php';
                         </li>
                         
                         <?php
-                        // Pagination logic: show first, last, current, and nearby pages
-                        $show_pages = 5; // Max pages to show
+                        // Pagination logic
+                        $show_pages = 5; 
                         $start_page = max(1, $page - 2);
                         $end_page = min($total_pages, $page + 2);
                         
@@ -1403,8 +1705,6 @@ require_once 'header.php';
 // ========= PRICE RANGE SLIDER =========
 const minRange = document.getElementById('min-range');
 const maxRange = document.getElementById('max-range');
-const minPriceDisplay = document.getElementById('min-price-display');
-const maxPriceDisplay = document.getElementById('max-price-display');
 const priceTrack = document.getElementById('price-track');
 const minPriceInput = document.getElementById('harga_min');
 const maxPriceInput = document.getElementById('harga_max');
@@ -1417,45 +1717,91 @@ function updatePriceSlider() {
     let minVal = parseInt(minRange.value);
     let maxVal = parseInt(maxRange.value);
     
-    // Prevent overlap
-    if (maxVal - minVal < 500000) {
-        if (event.target === minRange) {
-            minVal = maxVal - 500000;
+    // Prevent overlap 
+    if (maxVal - minVal < 100000) {
+        if (event && event.target === minRange) {
+            minVal = maxVal - 100000;
             minRange.value = minVal;
-        } else {
-            maxVal = minVal + 500000;
+        } else if (event && event.target === maxRange) {
+            maxVal = minVal + 100000;
             maxRange.value = maxVal;
         }
     }
     
-    // Update displays
-    minPriceDisplay.textContent = formatRupiah(minVal);
-    maxPriceDisplay.textContent = formatRupiah(maxVal);
-    
-    // Update manual inputs
+    // Update manual inputs dengan format
     minPriceInput.value = minVal;
     maxPriceInput.value = maxVal;
     
-    // Update track
-    const percentMin = (minVal / 50000000) * 100;
-    const percentMax = (maxVal / 50000000) * 100;
+    // Update track position
+    const percentMin = (minVal / 5000000) * 100;
+    const percentMax = (maxVal / 5000000) * 100;
     priceTrack.style.left = percentMin + '%';
     priceTrack.style.width = (percentMax - percentMin) + '%';
 }
 
+// Event listeners untuk slider
 minRange.addEventListener('input', updatePriceSlider);
 maxRange.addEventListener('input', updatePriceSlider);
 
-// Update slider when manual input changes
-minPriceInput.addEventListener('input', function() {
-    minRange.value = this.value;
-    updatePriceSlider();
+// Event listeners untuk manual input
+minPriceInput.addEventListener('change', function() {
+    let val = parseInt(this.value) || 0;
+    
+    // Batasi nilai
+    if (val < 0) val = 0;
+    if (val > 5000000) val = 5000000;
+    
+    // Set balik ke input (
+    this.value = val;
+    
+    // Update slider
+    minRange.value = val;
+    
+    // Trigger update 
+    updatePriceSliderManual();
 });
 
-maxPriceInput.addEventListener('input', function() {
-    maxRange.value = this.value;
-    updatePriceSlider();
+maxPriceInput.addEventListener('change', function() {
+    let val = parseInt(this.value) || 0;
+    
+    // Batasi nilai
+    if (val < 0) val = 0;
+    if (val > 5000000) val = 5000000;
+    
+    // Set balik ke input
+    this.value = val;
+    
+    // Update slider
+    maxRange.value = val;
+    
+    // Trigger update
+    updatePriceSliderManual();
 });
+
+// Function khusus update dari manual input (tanpa event check)
+function updatePriceSliderManual() {
+    let minVal = parseInt(minRange.value);
+    let maxVal = parseInt(maxRange.value);
+    
+    // Prevent overlap
+    if (maxVal - minVal < 100000) {
+        if (minVal + 100000 <= 5000000) {
+            maxVal = minVal + 100000;
+            maxRange.value = maxVal;
+            maxPriceInput.value = maxVal;
+        } else {
+            minVal = maxVal - 100000;
+            minRange.value = minVal;
+            minPriceInput.value = minVal;
+        }
+    }
+    
+    // Update track position
+    const percentMin = (minVal / 5000000) * 100;
+    const percentMax = (maxVal / 5000000) * 100;
+    priceTrack.style.left = percentMin + '%';
+    priceTrack.style.width = (percentMax - percentMin) + '%';
+}
 
 // Initialize on load
 updatePriceSlider();
@@ -1482,8 +1828,8 @@ const checkinPicker = flatpickr(checkinInput, {
     minDate: "today",
     disable: [
         function(date) {
-            // Disable Sundays (optional)
-            return false; // Set to true to disable Sundays: date.getDay() === 0
+            // Disable Sundays 
+            return false; 
         }
     ],
     onChange: function(selectedDates, dateStr, instance) {
@@ -1567,11 +1913,26 @@ document.getElementById('kecamatan').addEventListener('blur', function() {
 });
 
 // Guest dropdown management
+// ========= GUEST DROPDOWN MANAGEMENT (FIXED) =========
 let guestCounts = {
-    room: 1,
-    adult: 1,
-    child: 0
+    room: <?= $rooms ?>,    
+    adult: <?= $adults ?>,  
+    child: <?= $children ?> 
 };
+
+// Inisialisasi tampilan saat halaman load
+function initGuestDisplay() {
+    document.getElementById('room-count').textContent = guestCounts.room;
+    document.getElementById('adult-count').textContent = guestCounts.adult;
+    document.getElementById('child-count').textContent = guestCounts.child;
+    
+    // Update hidden inputs
+    document.getElementById('rooms-input').value = guestCounts.room;
+    document.getElementById('adults-input').value = guestCounts.adult;
+    document.getElementById('children-input').value = guestCounts.child;
+    
+    updateGuestSummary();
+}
 
 function toggleGuestMenu() {
     const menu = document.getElementById('guest-menu');
@@ -1584,7 +1945,14 @@ function changeGuest(type, delta) {
     
     guestCounts[type] = Math.max(minValues[type], Math.min(maxValues[type], guestCounts[type] + delta));
     
+    // Update tampilan count
     document.getElementById(`${type}-count`).textContent = guestCounts[type];
+    
+    // Update hidden inputs
+    document.getElementById('rooms-input').value = guestCounts.room;
+    document.getElementById('adults-input').value = guestCounts.adult;
+    document.getElementById('children-input').value = guestCounts.child;
+    
     updateGuestSummary();
 }
 
@@ -1602,6 +1970,9 @@ document.addEventListener('click', function(event) {
         guestMenu.classList.remove('active');
     }
 });
+
+// Panggil saat halaman load
+initGuestDisplay();
 
 // ========= SMOOTH SCROLL ON PAGINATION =========
 document.querySelectorAll('.page-link').forEach(link => {
