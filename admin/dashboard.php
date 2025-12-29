@@ -23,52 +23,35 @@ $total_booking = getTotal($conn,"
 $total_refund = getTotal($conn,"
     SELECT COUNT(*) AS total 
     FROM refund 
-    WHERE status_refund='pending'
+    WHERE status='pending'
 ");
 
 $pendapatan = getTotal($conn,"
     SELECT SUM(total_bayar) AS total 
     FROM pembayaran 
-    WHERE status_pembayaran='lunas'
-    AND MONTH(tanggal_bayar)=MONTH(CURDATE())
+    WHERE status='lunas'
+    AND MONTH(created_at)=MONTH(CURDATE())
 ");
 
 /* ================= CHART DATA ================= */
 $dataPendapatan = mysqli_query($conn,"
-    SELECT 
-        COALESCE(kab.nama_kabupaten, 'Unknown') AS kabupaten, 
-        SUM(p.total_bayar) AS total
+    SELECT b.kabupaten, SUM(p.total_bayar) total
     FROM pembayaran p
-    JOIN booking b ON p.id_booking = b.id_booking
-    JOIN penginapan pen ON b.id_penginapan = pen.id_penginapan
-    LEFT JOIN kabupaten kab ON pen.id_kabupaten = kab.id_kabupaten
-    WHERE p.status_pembayaran = 'lunas'
-    GROUP BY kab.nama_kabupaten
+    JOIN booking b ON p.id_booking=b.id_booking
+    WHERE p.status='lunas'
+    GROUP BY b.kabupaten
 ");
 
 $dataReservasi = mysqli_query($conn,"
-    SELECT 
-        COALESCE(kab.nama_kabupaten, 'Unknown') AS kabupaten, 
-        COUNT(*) AS total
-    FROM booking b
-    JOIN penginapan pen ON b.id_penginapan = pen.id_penginapan
-    LEFT JOIN kabupaten kab ON pen.id_kabupaten = kab.id_kabupaten
-    GROUP BY kab.nama_kabupaten
+    SELECT kabupaten, COUNT(*) total
+    FROM booking
+    GROUP BY kabupaten
 ");
 
 /* ================= TRANSAKSI ================= */
 $transaksi = mysqli_query($conn,"
-    SELECT 
-        b.id_booking,
-        b.kode_booking,
-        b.tanggal_checkin AS check_in,
-        b.status_reservasi AS status,
-        pen.nama_penginapan,
-        u.nama AS nama_pelanggan
-    FROM booking b
-    JOIN penginapan pen ON b.id_penginapan = pen.id_penginapan
-    JOIN users u ON b.id_user = u.id_user
-    ORDER BY b.created_at DESC 
+    SELECT * FROM booking 
+    ORDER BY created_at DESC 
     LIMIT 5
 ");
 ?>
@@ -213,12 +196,12 @@ a.id-link{color:#2563eb;text-decoration:none;font-weight:600}
             <tr>
                 <td>
                     <a class="id-link" href="detail_reservasi.php?id=<?= $r['id_booking'] ?>">
-                        <?= htmlspecialchars($r['kode_booking']) ?>
+                        <?= $r['id_booking'] ?>
                     </a>
                 </td>
-                <td><?= htmlspecialchars($r['nama_penginapan']) ?></td>
-                <td><?= htmlspecialchars($r['nama_pelanggan']) ?></td>
-                <td><?= date('d-m-Y', strtotime($r['check_in'])) ?></td>
+                <td><?= $r['nama_penginapan'] ?></td>
+                <td><?= $r['nama_pelanggan'] ?></td>
+                <td><?= date('d-m-Y',strtotime($r['check_in'])) ?></td>
                 <td>
                     <span class="status <?= strtolower($r['status']) ?>">
                         <?= ucfirst($r['status']) ?>

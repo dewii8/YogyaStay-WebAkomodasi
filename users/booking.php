@@ -9,26 +9,14 @@ if (!$conn) {
 // Ambil parameter dari URL
 $id_penginapan = isset($_GET['id_penginapan']) ? intval($_GET['id_penginapan']) : 0;
 $id_tipe_kamar = isset($_GET['id_tipe_kamar']) ? intval($_GET['id_tipe_kamar']) : 0;
-$checkin = isset($_GET['checkin']) && !empty($_GET['checkin']) ? $_GET['checkin'] : date('Y-m-d');
-$checkout = isset($_GET['checkout']) && !empty($_GET['checkout']) ? $_GET['checkout'] : date('Y-m-d', strtotime('+1 day'));
+$checkin = isset($_GET['checkin']) ? $_GET['checkin'] : '';
+$checkout = isset($_GET['checkout']) ? $_GET['checkout'] : '';
 $jumlah_kamar = isset($_GET['jumlah_kamar']) ? intval($_GET['jumlah_kamar']) : 1;
-
-// Validasi ID penginapan
-if ($id_penginapan <= 0) {
-    header("Location: penginapan.php");
-    exit;
-}
 
 // Ambil data penginapan
 $sql_penginapan = "SELECT * FROM penginapan WHERE id_penginapan = $id_penginapan";
 $result_penginapan = mysqli_query($conn, $sql_penginapan);
 $penginapan = mysqli_fetch_assoc($result_penginapan);
-
-// Validasi penginapan
-if (!$penginapan) {
-    header("Location: penginapan.php");
-    exit;
-}
 
 // Ambil data tipe kamar jika ada
 $tipe_kamar = null;
@@ -39,25 +27,13 @@ if ($id_tipe_kamar > 0) {
 }
 
 // Hitung jumlah malam
-$jumlah_malam = 1;
-if (!empty($checkin) && !empty($checkout)) {
-    try {
-        $date1 = new DateTime($checkin);
-        $date2 = new DateTime($checkout);
-        $interval = $date1->diff($date2);
-        $jumlah_malam = $interval->days > 0 ? $interval->days : 1;
-    } catch (Exception $e) {
-        $jumlah_malam = 1;
-    }
-}
+$date1 = new DateTime($checkin);
+$date2 = new DateTime($checkout);
+$interval = $date1->diff($date2);
+$jumlah_malam = $interval->days > 0 ? $interval->days : 1;
 
 // Hitung total harga
-$harga_per_malam = 0;
-if ($tipe_kamar && isset($tipe_kamar['harga'])) {
-    $harga_per_malam = $tipe_kamar['harga'];
-} elseif (isset($penginapan['harga_mulai'])) {
-    $harga_per_malam = $penginapan['harga_mulai'];
-}
+$harga_per_malam = $tipe_kamar ? $tipe_kamar['harga'] : $penginapan['harga_mulai'];
 $total_harga = $harga_per_malam * $jumlah_malam * $jumlah_kamar;
 
 // Tentukan step (default step 1)
@@ -71,89 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['step1'])) {
         'telepon' => $_POST['telepon'],
         'jumlah_kamar' => $_POST['jumlah_kamar']
     ];
-    header("Location: booking.php?id_penginapan=$id_penginapan&id_tipe_kamar=$id_tipe_kamar&checkin=$checkin&checkout=$checkout&jumlah_kamar={$_POST['jumlah_kamar']}&step=2");
+    header("Location: booking.php?id_penginapan=$id_penginapan&id_tipe_kamar=$id_tipe_kamar&checkin=$checkin&checkout=$checkout&jumlah_kamar=$jumlah_kamar&step=2");
     exit;
-}
-
-// Proses pembayaran (step 2 -> insert database -> redirect success)
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['konfirmasi_pembayaran'])) {
-    // Cek apakah user sudah login
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ../autentikasi/login.php");
-        exit;
-    }
-    
-    // Cek apakah ada data booking di session
-    if (!isset($_SESSION['booking_data'])) {
-        header("Location: penginapan.php");
-        exit;
-    }
-    
-    // Ambil data dari POST dan SESSION
-    $id_user = $_SESSION['user_id'];
-    $id_penginapan_post = intval($_POST['id_penginapan']);
-    $id_tipe_kamar_post = intval($_POST['id_tipe_kamar']);
-    $tanggal_checkin = mysqli_real_escape_string($conn, $_POST['checkin']);
-    $tanggal_checkout = mysqli_real_escape_string($conn, $_POST['checkout']);
-    $jumlah_kamar_post = intval($_POST['jumlah_kamar']);
-    $metode_pembayaran = mysqli_real_escape_string($conn, $_POST['metode_pembayaran']);
-    
-    // Data dari session step 1
-    $booking_data = $_SESSION['booking_data'];
-    $nama_lengkap = mysqli_real_escape_string($conn, $booking_data['nama_lengkap']);
-    $email = mysqli_real_escape_string($conn, $booking_data['email']);
-    $telepon = mysqli_real_escape_string($conn, $booking_data['telepon']);
-    
-    // Generate kode booking (format: JS-XXXXXX)
-    $kode_booking = 'JS-' . str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-    
-    // Cek apakah kode booking sudah ada
-    $check_kode = mysqli_query($conn, "SELECT kode_booking FROM booking WHERE kode_booking = '$kode_booking'");
-    while (mysqli_num_rows($check_kode) > 0) {
-        $kode_booking = 'JS-' . str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-        $check_kode = mysqli_query($conn, "SELECT kode_booking FROM booking WHERE kode_booking = '$kode_booking'");
-    }
-    
-    // Jumlah orang (default jumlah kamar * 2)
-    $jumlah_orang = $jumlah_kamar_post * 2;
-    
-    // Insert ke tabel booking
-    $insert_booking = "INSERT INTO booking (
-                            kode_booking,
-                            id_user,
-                            id_penginapan,
-                            id_tipe_kamar,
-                            tanggal_checkin,
-                            tanggal_checkout,
-                            jumlah_kamar,
-                            jumlah_orang,
-                            total_harga,
-                            status_reservasi,
-                            created_at
-                        ) VALUES (
-                            '$kode_booking',
-                            $id_user,
-                            $id_penginapan_post,
-                            $id_tipe_kamar_post,
-                            '$tanggal_checkin',
-                            '$tanggal_checkout',
-                            $jumlah_kamar_post,
-                            $jumlah_orang,
-                            $total_harga,
-                            'confirmed',
-                            NOW()
-                        )";
-    
-    if (mysqli_query($conn, $insert_booking)) {
-        // Hapus session booking_data
-        unset($_SESSION['booking_data']);
-        
-        // Redirect ke booking_success
-        header("Location: booking_success.php?kode=$kode_booking");
-        exit;
-    } else {
-        die("Error menyimpan booking: " . mysqli_error($conn));
-    }
 }
 
 // Include header
@@ -566,61 +461,61 @@ require_once 'header.php';
                 </form>
 
             <?php } else if ($step == 2) { ?>
-                <!-- STEP 2: PEMBAYARAN -->
-                <form method="POST" class="booking-form">
-                    <input type="hidden" name="konfirmasi_pembayaran" value="1">
-                    <input type="hidden" name="id_penginapan" value="<?= $id_penginapan ?>">
-                    <input type="hidden" name="id_tipe_kamar" value="<?= $id_tipe_kamar ?>">
-                    <input type="hidden" name="checkin" value="<?= $checkin ?>">
-                    <input type="hidden" name="checkout" value="<?= $checkout ?>">
-                    <input type="hidden" name="jumlah_kamar" value="<?= $jumlah_kamar ?>">
+                    <!-- STEP 2: PEMBAYARAN -->
+                    <form method="POST" action="proses_booking.php" class="booking-form">
+                        <input type="hidden" name="id_penginapan" value="<?= $id_penginapan ?>">
+                        <input type="hidden" name="id_tipe_kamar" value="<?= $id_tipe_kamar ?>">
+                        <input type="hidden" name="checkin" value="<?= $checkin ?>">
+                        <input type="hidden" name="checkout" value="<?= $checkout ?>">
+                        <input type="hidden" name="jumlah_kamar" value="<?= $jumlah_kamar ?>">
 
-                    <div class="price-box">
-                        <div class="price-title">Total Tagihan: <span class="price-amount">Rp
-                            <?= number_format($total_harga, 0, ',', '.') ?></span></div>
-                        <div class="price-note">Periksa data Anda sebelum pembayaran</div>
-                    </div>
+                        <div class="price-box">
+                            <div class="price-title">Total Tagihan: <span class="price-amount">Rp
+                                <?= number_format($total_harga, 0, ',', '.') ?></span></div>
+                            <div class="price-note">Periksa data Anda sebelum pembayaran</div>
+                        </div>
 
-                    <div class="payment-section">
-                        <div class="payment-title">Metode Pembayaran</div>
+                        <div class="payment-section">
+                            <div class="payment-title">Metode Pembayaran</div>
 
-                        <div class="payment-dropdown">
-                            <div class="payment-header" onclick="togglePaymentDropdown()">
-                                <span id="payment-selected">Transfer Bank</span>
-                                <span class="payment-arrow" id="payment-arrow">▼</span>
-                            </div>
+                            <div class="payment-dropdown">
+                                <div class="payment-header" onclick="togglePaymentDropdown()">
+                                    <span id="payment-selected">Transfer Bank</span>
+                                    <span class="payment-arrow" id="payment-arrow">▼</span>
+                                </div>
 
-                            <div class="payment-list" id="payment-list">
-                                <label class="payment-item">
-                                    <input type="radio" name="metode_pembayaran" value="Transfer Bank" checked>
-                                    <span>Transfer Bank</span>
-                                </label>
+                                <div class="payment-list" id="payment-list">
+                                    <label class="payment-item">
+                                        <input type="radio" name="metode_pembayaran" value="transfer" checked>
+                                        <span>Transfer Bank</span>
+                                    </label>
 
-                                <label class="payment-item">
-                                    <input type="radio" name="metode_pembayaran" value="Kartu Kredit/Debit">
-                                    <span>Kartu Kredit / Debit</span>
-                                </label>
+                                    <label class="payment-item">
+                                        <input type="radio" name="metode_pembayaran" value="kartu">
+                                        <span>Kartu Kredit / Debit</span>
+                                    </label>
 
-                                <label class="payment-item">
-                                    <input type="radio" name="metode_pembayaran" value="E-Wallet">
-                                    <span>E-Wallet</span>
-                                </label>
+                                    <label class="payment-item">
+                                        <input type="radio" name="metode_pembayaran" value="ewallet">
+                                        <span>E-Wallet</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="button-group">
-                        <button type="button" class="btn btn-secondary"
-                            onclick="window.location.href='booking.php?id_penginapan=<?= $id_penginapan ?>&id_tipe_kamar=<?= $id_tipe_kamar ?>&checkin=<?= $checkin ?>&checkout=<?= $checkout ?>&jumlah_kamar=<?= $jumlah_kamar ?>&step=1'">
-                            <span>←</span>
-                            Kembali
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            Konfirmasi
-                            <span>→</span>
-                        </button>
-                    </div>
-                </form>
+
+                        <div class="button-group">
+                            <button type="button" class="btn btn-secondary"
+                                onclick="window.location.href='booking.php?id_penginapan=<?= $id_penginapan ?>&id_tipe_kamar=<?= $id_tipe_kamar ?>&checkin=<?= $checkin ?>&checkout=<?= $checkout ?>&jumlah_kamar=<?= $jumlah_kamar ?>&step=1'">
+                                <span>←</span>
+                                Kembali
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                Konfirmasi
+                                <span>→</span>
+                            </button>
+                        </div>
+                    </form>
             <?php } ?>
 
         </div>
@@ -651,11 +546,12 @@ require_once 'header.php';
     document.addEventListener('click', function (e) {
         const dropdown = document.querySelector('.payment-dropdown');
         if (dropdown && !dropdown.contains(e.target)) {
-            document.getElementById('payment-list')?.classList.remove('active');
-            document.getElementById('payment-arrow')?.classList.remove('rotate');
+            document.getElementById('payment-list').classList.remove('active');
+            document.getElementById('payment-arrow').classList.remove('rotate');
         }
     });
 </script>
+
 
 <?php
 // Include footer

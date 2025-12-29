@@ -6,6 +6,7 @@ if (!$conn) {
     die("Koneksi database gagal: " . mysqli_connect_error());
 }
 
+// Ambil ID penginapan dari URL
 $id_penginapan = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($id_penginapan <= 0) {
@@ -13,7 +14,7 @@ if ($id_penginapan <= 0) {
     exit;
 }
 
-// Mengambil detail penginapan
+// Query untuk mengambil detail penginapan
 $sql = "SELECT p.*, kc.nama_kecamatan, kb.nama_kabupaten
         FROM penginapan p
         LEFT JOIN kecamatan kc ON p.id_kecamatan = kc.id_kecamatan
@@ -29,72 +30,11 @@ if (!$result || mysqli_num_rows($result) == 0) {
 
 $penginapan = mysqli_fetch_assoc($result);
 
-// Mengambil tipe kamar
-$sql_kamar = "SELECT * FROM tipe_kamar WHERE id_penginapan = $id_penginapan ORDER BY harga_per_malam ASC";
+// Query untuk mengambil tipe kamar
+$sql_kamar = "SELECT * FROM tipe_kamar WHERE id_penginapan = $id_penginapan ORDER BY harga ASC";
 $result_kamar = mysqli_query($conn, $sql_kamar);
 
-// Mengambil fasilitas penginapan
-$sql_fasilitas = "SELECT f.* FROM fasilitas f
-                  INNER JOIN penginapan_fasilitas pf ON f.id_fasilitas = pf.id_fasilitas
-                  WHERE pf.id_penginapan = $id_penginapan
-                  ORDER BY f.nama_fasilitas ASC";
-$result_fasilitas = mysqli_query($conn, $sql_fasilitas);
-
-// Mengambil kontak penginapan
-$sql_kontak = "SELECT * FROM kontak_penginapan WHERE id_penginapan = $id_penginapan";
-$result_kontak = mysqli_query($conn, $sql_kontak);
-$kontak_data = [];
-if ($result_kontak) {
-    while($row = mysqli_fetch_assoc($result_kontak)) {
-        $kontak_data[$row['jenis_kontak']] = $row['isi_kontak'];
-    }
-}
-
-// Mengambil gambar penginapan
-$sql_gambar = "SELECT * FROM gambar_penginapan WHERE id_penginapan = $id_penginapan ORDER BY is_thumbnail DESC, id_gambar ASC LIMIT 3";
-$result_gambar = mysqli_query($conn, $sql_gambar);
-
-// Susun array gambar
-$gambar_array = [];
-if ($result_gambar && mysqli_num_rows($result_gambar) > 0) {
-    while ($img = mysqli_fetch_assoc($result_gambar)) {
-        if (!empty($img['path_gambar'])) {
-            $gambar_array[] = $img['path_gambar'];
-        }
-    }
-}
-
-// Gunakan placeholder jika tidak ada gambar
-if (empty($gambar_array)) {
-    $default_image = 'assets/images/no-image.jpg';
-    $gambar_array = [$default_image, $default_image, $default_image];
-}
-
-// Icon mapping untuk fasilitas
-$icon_map = [
-    'WiFi' => '📶',
-    'AC' => '❄️',
-    'TV' => '📺',
-    'Kamar Mandi Dalam' => '🚿',
-    'Air Panas' => '♨️',
-    'Kolam Renang' => '🏊',
-    'Parkir' => '🚗',
-    'Resepsionis 24 Jam' => '🏨',
-    'Sarapan' => '🍳',
-    'Dapur' => '🍽️',
-    'Private Pool' => '🏊‍♂️',
-    'Balkon' => '🏞️',
-    'View Alam' => '🌄',
-    'Lift' => '🛗',
-    'Gym' => '💪',
-    'Meeting Room' => '🏢',
-    'Kolam Renang Outdoor' => '🏊',
-    'Restoran & Cafe' => '🍽️',
-    'Layanan Laundry' => '🧺',
-    'Bebas Rokok' => '🚫'
-];
-
-// Header
+// Include header
 require_once 'header.php';
 ?>
 
@@ -148,15 +88,12 @@ require_once 'header.php';
 .gallery-main {
     position: relative;
     overflow: hidden;
-    background: #f0f0f0;
-    min-height: 400px;
 }
 
 .gallery-main img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
 }
 
 .gallery-sidebar {
@@ -168,8 +105,6 @@ require_once 'header.php';
 .gallery-item {
     position: relative;
     overflow: hidden;
-    background: #f0f0f0;
-    min-height: 195px;
 }
 
 .gallery-item img {
@@ -177,7 +112,6 @@ require_once 'header.php';
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s;
-    display: block;
 }
 
 .gallery-item:hover img {
@@ -290,14 +224,12 @@ require_once 'header.php';
 .room-image {
     height: 180px;
     overflow: hidden;
-    background: #f0f0f0;
 }
 
 .room-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
 }
 
 .room-info {
@@ -316,12 +248,6 @@ require_once 'header.php';
     font-size: 14px;
     line-height: 1.6;
     margin-bottom: 15px;
-}
-
-.room-capacity {
-    color: #888;
-    font-size: 13px;
-    margin-bottom: 10px;
 }
 
 .room-price-box {
@@ -498,41 +424,6 @@ require_once 'header.php';
     color: #f5a742;
 }
 
-/* Compact Contact Style */
-.contact-item-compact {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.contact-item-compact:last-child {
-    border-bottom: none;
-}
-
-.contact-icon-compact {
-    font-size: 20px;
-    color: #f5a742;
-    width: 30px;
-    text-align: center;
-}
-
-.contact-info-compact {
-    flex: 1;
-}
-
-.contact-info-compact a {
-    color: #555;
-    text-decoration: none;
-    font-size: 14px;
-    transition: color 0.3s;
-}
-
-.contact-info-compact a:hover {
-    color: #f5a742;
-}
-
 /* ========= BOOKING CARD (SIDEBAR) ========= */
 .booking-card {
     background: white;
@@ -625,12 +516,6 @@ require_once 'header.php';
     margin-top: 10px;
 }
 
-.empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: #666;
-}
-
 /* ========= RESPONSIVE ========= */
 @media (max-width: 968px) {
     .detail-container {
@@ -677,22 +562,15 @@ require_once 'header.php';
         <!-- Gallery -->
         <div class="gallery-grid">
             <div class="gallery-main">
-                <?php if (!empty($gambar_array[0])) { ?>
-                <img src="<?= htmlspecialchars($gambar_array[0]) ?>" alt="<?= htmlspecialchars($penginapan['nama_penginapan']) ?>" onerror="this.src='assets/images/no-image.jpg'">
-                <?php } ?>
+                <img src="<?= htmlspecialchars($penginapan['gambar']) ?>" alt="<?= htmlspecialchars($penginapan['nama_penginapan']) ?>">
             </div>
             <div class="gallery-sidebar">
-                <?php 
-                for($i = 1; $i < count($gambar_array) && $i < 3; $i++) { 
-                    if (!empty($gambar_array[$i])) {
-                ?>
                 <div class="gallery-item">
-                    <img src="<?= htmlspecialchars($gambar_array[$i]) ?>" alt="<?= htmlspecialchars($penginapan['nama_penginapan']) ?> - Gallery <?= $i ?>" onerror="this.src='assets/images/no-image.jpg'">
+                    <img src="<?= htmlspecialchars($penginapan['gambar']) ?>" alt="Gallery 1">
                 </div>
-                <?php 
-                    }
-                } 
-                ?>
+                <div class="gallery-item">
+                    <img src="<?= htmlspecialchars($penginapan['gambar']) ?>" alt="Gallery 2">
+                </div>
             </div>
         </div>
     </div>
@@ -719,13 +597,7 @@ require_once 'header.php';
         <div id="deskripsi" class="section-card">
             <h2 class="section-title">Deskripsi</h2>
             <div class="section-description">
-                <?php 
-                if (!empty($penginapan['deskripsi'])) {
-                    echo nl2br(htmlspecialchars($penginapan['deskripsi']));
-                } else {
-                    echo '<p style="color: #999; font-style: italic;">Informasi deskripsi belum tersedia untuk penginapan ini.</p>';
-                }
-                ?>
+                <?= nl2br(htmlspecialchars($penginapan['deskripsi'] ?? 'Desain dan arsitektur menjadi salah satu faktor penentu kenyamanan Anda di hotel. Liberta Malioboro South menyediakan tempat menginap yang tak hanya nyaman untuk beristirahat, tetapi juga desain cantik yang memanjakan mata Anda.')) ?>
             </div>
         </div>
         
@@ -739,30 +611,17 @@ require_once 'header.php';
                 ?>
                 <div class="room-card">
                     <div class="room-image">
-                        <?php 
-                        $room_image = !empty($gambar_array[0]) ? $gambar_array[0] : 'assets/images/no-image.jpg';
-                        ?>
-                        <img src="<?= htmlspecialchars($room_image) ?>" alt="<?= htmlspecialchars($kamar['nama_tipe']) ?>" onerror="this.src='assets/images/no-image.jpg'">
+                        <img src="<?= htmlspecialchars($kamar['gambar'] ?? $penginapan['gambar']) ?>" alt="<?= htmlspecialchars($kamar['nama_tipe']) ?>">
                     </div>
                     <div class="room-info">
                         <h3 class="room-name"><?= htmlspecialchars($kamar['nama_tipe']) ?></h3>
-                        <div class="room-capacity">
-                            👥 Kapasitas: <?= $kamar['kapasitas_orang'] ?> orang | 
-                            🛏️ Tersedia: <?= $kamar['jumlah_kamar'] ?> kamar
-                        </div>
                         <div class="room-features">
-                            <?php 
-                            if (!empty($kamar['deskripsi'])) {
-                                echo htmlspecialchars($kamar['deskripsi']);
-                            } else {
-                                echo "Kamar nyaman dengan fasilitas lengkap";
-                            }
-                            ?>
+                            <?= htmlspecialchars($kamar['deskripsi'] ?? 'Kamar nyaman dengan fasilitas lengkap') ?>
                         </div>
                         <div class="room-price-box">
                             <div>
-                                <div class="room-price-label">Harga per malam</div>
-                                <div class="room-price">Rp <?= number_format($kamar['harga_per_malam'], 0, ',', '.') ?></div>
+                                <div class="room-price-label">Mulai dari</div>
+                                <div class="room-price">Rp <?= number_format($kamar['harga'], 0, ',', '.') ?></div>
                             </div>
                         </div>
                         <button class="btn-book-room" onclick="window.location.href='booking.php?id_penginapan=<?= $id_penginapan ?>&id_tipe_kamar=<?= $kamar['id_tipe_kamar'] ?>&checkin=&checkout=&jumlah_kamar=1'">Pesan</button>
@@ -771,9 +630,25 @@ require_once 'header.php';
                 <?php 
                     }
                 } else {
+                    // Jika tidak ada tipe kamar, tampilkan default
                 ?>
-                <div class="empty-state">
-                    <p style="color: #999; font-style: italic;">📋 Informasi tipe kamar belum tersedia. Silakan hubungi kami untuk informasi lebih lanjut.</p>
+                <div class="room-card">
+                    <div class="room-image">
+                        <img src="<?= htmlspecialchars($penginapan['gambar']) ?>" alt="Standard Room">
+                    </div>
+                    <div class="room-info">
+                        <h3 class="room-name">Standard Room</h3>
+                        <div class="room-features">
+                            Kamar standar dengan fasilitas lengkap dan kenyamanan maksimal
+                        </div>
+                        <div class="room-price-box">
+                            <div>
+                                <div class="room-price-label">Mulai dari</div>
+                                <div class="room-price">Rp <?= number_format($penginapan['harga_mulai'], 0, ',', '.') ?></div>
+                            </div>
+                        </div>
+                        <button class="btn-book-room" onclick="window.location.href='booking.php?id_penginapan=<?= $id_penginapan ?>&id_tipe_kamar=0&checkin=&checkout=&jumlah_kamar=1'">Pesan</button>
+                    </div>
                 </div>
                 <?php } ?>
             </div>
@@ -783,23 +658,30 @@ require_once 'header.php';
         <div id="fasilitas" class="section-card">
             <h2 class="section-title">Fasilitas</h2>
             <div class="facilities-grid">
-                <?php 
-                if ($result_fasilitas && mysqli_num_rows($result_fasilitas) > 0) {
-                    while($fasilitas = mysqli_fetch_assoc($result_fasilitas)) { 
-                        $icon = isset($icon_map[$fasilitas['nama_fasilitas']]) ? $icon_map[$fasilitas['nama_fasilitas']] : '✓';
-                ?>
                 <div class="facility-item">
-                    <div class="facility-icon"><?= $icon ?></div>
-                    <div class="facility-name"><?= htmlspecialchars($fasilitas['nama_fasilitas']) ?></div>
+                    <div class="facility-icon">📶</div>
+                    <div class="facility-name">WiFi</div>
                 </div>
-                <?php 
-                    }
-                } else {
-                ?>
-                <div class="empty-state" style="grid-column: 1 / -1;">
-                    <p style="color: #999; font-style: italic;">🏨 Informasi fasilitas sedang dalam proses pembaruan.</p>
+                <div class="facility-item">
+                    <div class="facility-icon">🍽️</div>
+                    <div class="facility-name">Kolam Renang Outdoor</div>
                 </div>
-                <?php } ?>
+                <div class="facility-item">
+                    <div class="facility-icon">✈️</div>
+                    <div class="facility-name">Restoran & Cafe</div>
+                </div>
+                <div class="facility-item">
+                    <div class="facility-icon">🚗</div>
+                    <div class="facility-name">Parkir Gratis</div>
+                </div>
+                <div class="facility-item">
+                    <div class="facility-icon">🧺</div>
+                    <div class="facility-name">Layanan Laundry</div>
+                </div>
+                <div class="facility-item">
+                    <div class="facility-icon">🚫</div>
+                    <div class="facility-name">Bebas Rokok</div>
+                </div>
             </div>
         </div>
         
@@ -808,109 +690,62 @@ require_once 'header.php';
             <h2 class="section-title">Peta dan Alamat Lokasi</h2>
             <div class="location-content">
                 <div class="map-container">
-                    <?php 
-                    if (!empty($penginapan['latitude']) && !empty($penginapan['longitude'])) {
-                        $map_url = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3953.0!2d{$penginapan['longitude']}!3d{$penginapan['latitude']}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zM8KwNDYnNDguMCJTIDExMMKwMjEnMzYuMCJF!5e0!3m2!1sid!2sid!4v1234567890";
-                    } else {
-                        $map_url = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3953.0!2d110.36!3d-7.78!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwNDYnNDguMCJTIDExMMKwMjEnMzYuMCJF!5e0!3m2!1sid!2sid!4v1234567890";
-                    }
-                    ?>
-                    <iframe src="<?= htmlspecialchars($map_url) ?>" allowfullscreen="" loading="lazy"></iframe>
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3953.0!2d110.36!3d-7.78!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwNDYnNDguMCJTIDExMMKwMjEnMzYuMCJF!5e0!3m2!1sid!2sid!4v1234567890" allowfullscreen="" loading="lazy"></iframe>
                 </div>
                 <div class="address-box">
                     <div class="address-label">Alamat:</div>
                     <div class="address-text">
-                        <?php 
-                        $alamat_parts = [];
-                        
-                        if (!empty($penginapan['alamat'])) {
-                            $alamat_parts[] = $penginapan['alamat'];
-                        }
-                        
-                        if (!empty($penginapan['nama_kecamatan'])) {
-                            $alamat_parts[] = $penginapan['nama_kecamatan'];
-                        }
-                        
-                        if (!empty($penginapan['nama_kabupaten'])) {
-                            $alamat_parts[] = $penginapan['nama_kabupaten'];
-                        }
-                        
-                        $alamat_lengkap = !empty($alamat_parts) ? implode(', ', $alamat_parts) : 'Alamat belum tersedia';
-                        echo htmlspecialchars($alamat_lengkap);
-                        ?>
+                        <?= htmlspecialchars($penginapan['alamat'] ?? 'Jl. Pakuningratan No. 17 Gedong Tengen, Jalan Malioboro, Yogyakarta, Daerah Istimewa Yogyakarta, Indonesia') ?>
                     </div>
-                    <a href="https://maps.google.com/?q=<?= urlencode($penginapan['nama_penginapan'] . ' ' . implode(' ', $alamat_parts)) ?>" target="_blank" class="btn-maps">
+                    <a href="https://maps.google.com/?q=<?= urlencode($penginapan['nama_penginapan']) ?>" target="_blank" class="btn-maps">
                         Lihat di Google Maps →
                     </a>
                 </div>
             </div>
         </div>
         
-        <!-- Tentang Kami & Kontak (Side by Side) -->
+        <!-- Tentang Kami & Kontak -->
         <div class="info-grid">
             <!-- Tentang Kami -->
             <div id="tentang" class="section-card">
                 <h2 class="section-title">Tentang Kami</h2>
                 <div class="section-description">
-                    <?php 
-                    if (!empty($penginapan['tentang_kami'])) {
-                        echo nl2br(htmlspecialchars($penginapan['tentang_kami']));
-                    } else {
-                        echo '<p style="color: #999; font-style: italic;">Informasi tentang penginapan ini sedang dalam proses pembaruan. Silakan hubungi kami untuk informasi lebih lanjut.</p>';
-                    }
-                    ?>
+                    <?= nl2br(htmlspecialchars($penginapan['tentang'] ?? 'Liberta Malioboro South adalah jaringan hotel yang perkembangannya menginap yang menyenangkan dan berkomitmen untuk menjadi akomodasi pilihan di Yogyakarta, menawarkan nilai terbaik dengan lokasi yang strategis.')) ?>
                 </div>
             </div>
             
             <!-- Kontak -->
             <div id="kontak" class="section-card">
                 <h2 class="section-title">Kontak Kami</h2>
-                
-                <?php if (!empty($kontak_data)) { ?>
-                    
-                    <?php if (isset($kontak_data['telepon'])) { ?>
-                    <div class="contact-item-compact">
-                        <div class="contact-icon-compact">📞</div>
-                        <div class="contact-info-compact">
-                            <a href="tel:<?= htmlspecialchars($kontak_data['telepon']) ?>">
-                                <?= htmlspecialchars($kontak_data['telepon']) ?>
+                <div class="contact-item">
+                    <div class="contact-icon">📞</div>
+                    <div class="contact-info">
+                        <div class="contact-label">Telepon</div>
+                        <div class="contact-value"><?= htmlspecialchars($penginapan['telepon'] ?? '(0274) 388700') ?></div>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">📧</div>
+                    <div class="contact-info">
+                        <div class="contact-label">Email</div>
+                        <div class="contact-value">
+                            <a href="mailto:<?= htmlspecialchars($penginapan['email'] ?? 'reservation@hotel.com') ?>">
+                                <?= htmlspecialchars($penginapan['email'] ?? 'reservation@hotel.com') ?>
                             </a>
                         </div>
                     </div>
-                    <?php } ?>
-                    
-                    <?php if (isset($kontak_data['email'])) { ?>
-                    <div class="contact-item-compact">
-                        <div class="contact-icon-compact">📧</div>
-                        <div class="contact-info-compact">
-                            <a href="mailto:<?= htmlspecialchars($kontak_data['email']) ?>">
-                                <?= htmlspecialchars($kontak_data['email']) ?>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">🌐</div>
+                    <div class="contact-info">
+                        <div class="contact-label">Website</div>
+                        <div class="contact-value">
+                            <a href="<?= htmlspecialchars($penginapan['website'] ?? '#') ?>" target="_blank">
+                                <?= htmlspecialchars($penginapan['website'] ?? 'www.hotel.com') ?>
                             </a>
                         </div>
                     </div>
-                    <?php } ?>
-                    
-                    <?php if (isset($kontak_data['website'])) { ?>
-                    <div class="contact-item-compact">
-                        <div class="contact-icon-compact">🌐</div>
-                        <div class="contact-info-compact">
-                            <a href="<?= htmlspecialchars($kontak_data['website']) ?>" target="_blank">
-                                <?= htmlspecialchars($kontak_data['website']) ?>
-                            </a>
-                        </div>
-                    </div>
-                    <?php } ?>
-                    
-                <?php } else { ?>
-                    
-                    <div class="empty-state">
-                        <p style="color: #999; font-style: italic;">
-                            📞 Informasi kontak sedang dalam proses pembaruan.<br>
-                            Untuk informasi lebih lanjut, silakan hubungi pengelola melalui sistem booking kami.
-                        </p>
-                    </div>
-                    
-                <?php } ?>
+                </div>
             </div>
         </div>
         
@@ -933,20 +768,17 @@ require_once 'header.php';
                 
                 <div class="form-group">
                     <label class="form-label">Check-in</label>
-                    <input type="date" name="checkin" class="form-input" min="<?= date('Y-m-d') ?>" required>
+                    <input type="date" name="checkin" class="form-input" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Check-out</label>
-                    <input type="date" name="checkout" class="form-input" min="<?= date('Y-m-d', strtotime('+1 day')) ?>" required>
+                    <input type="date" name="checkout" class="form-input" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Jumlah Kamar</label>
                     <input type="number" name="jumlah_kamar" class="form-input" value="1" min="1" required>
                 </div>
                 <button type="submit" class="btn-booking">Pesan Sekarang</button>
-                <div class="booking-note">
-                    *Harga dapat berubah tergantung tanggal dan ketersediaan
-                </div>
             </form>
         </div>
     </div>
@@ -994,26 +826,9 @@ window.addEventListener('scroll', function() {
         }
     });
 });
-
-// Validasi tanggal check-in dan check-out
-const checkinInput = document.querySelector('input[name="checkin"]');
-const checkoutInput = document.querySelector('input[name="checkout"]');
-
-if (checkinInput && checkoutInput) {
-    checkinInput.addEventListener('change', function() {
-        const checkinDate = new Date(this.value);
-        const minCheckout = new Date(checkinDate);
-        minCheckout.setDate(minCheckout.getDate() + 1);
-        
-        checkoutInput.min = minCheckout.toISOString().split('T')[0];
-        
-        if (checkoutInput.value && new Date(checkoutInput.value) <= checkinDate) {
-            checkoutInput.value = '';
-        }
-    });
-}
 </script>
 
 <?php
+// Include footer
 require_once 'footer.php';
 ?>
