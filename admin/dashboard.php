@@ -36,7 +36,7 @@ $pendapatan = getTotal($conn, "
     AND YEAR(tanggal_bayar)=YEAR(CURDATE())
 ");
 
-/* ================= CHART DATA - Pendapatan per Kabupaten per Bulan ================= */
+/* ================= CHART DATA ================= */
 // Ambil semua kabupaten dari database
 $kabupatenQuery = mysqli_query($conn, "SELECT id_kabupaten, nama_kabupaten FROM kabupaten ORDER BY id_kabupaten");
 $kabupatenList = [];
@@ -61,7 +61,7 @@ $chartPendapatan = mysqli_query($conn, "
     ORDER BY kab.id_kabupaten, MONTH(p.tanggal_bayar)
 ");
 
-// Siapkan data untuk chart pendapatan (inisialisasi semua bulan dengan 0)
+// Siapkan data untuk chart pendapatan
 $dataPendapatanPerBulan = [];
 foreach ($kabupatenList as $kab) {
     $dataPendapatanPerBulan[$kab] = array_fill(1, 12, 0);
@@ -77,7 +77,7 @@ while ($row = mysqli_fetch_assoc($chartPendapatan)) {
     }
 }
 
-/* ================= CHART DATA - Reservasi per Kabupaten per Bulan ================= */
+/* ================= CHART DATA ================= */
 $chartReservasi = mysqli_query($conn, "
     SELECT 
         kab.nama_kabupaten AS kabupaten,
@@ -92,7 +92,7 @@ $chartReservasi = mysqli_query($conn, "
     ORDER BY kab.id_kabupaten, MONTH(b.created_at)
 ");
 
-// Siapkan data untuk chart reservasi (inisialisasi semua bulan dengan 0)
+// Siapkan data untuk chart reservasi
 $dataReservasiPerBulan = [];
 foreach ($kabupatenList as $kab) {
     $dataReservasiPerBulan[$kab] = array_fill(1, 12, 0);
@@ -108,7 +108,7 @@ while ($row = mysqli_fetch_assoc($chartReservasi)) {
     }
 }
 
-/* ================= TRANSAKSI - DENGAN FILTER ================= */
+/* ================= TRANSAKSI ================= */
 $filter_status = isset($_GET['status']) ? $_GET['status'] : 'semua';
 
 $whereClause = "";
@@ -158,7 +158,7 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin-YogyaStay</title>
     <link rel="icon" type="image/jpeg" href="../assets/img/logonw.png">
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <script src="https://code.highcharts.com/highcharts.js"></script>
@@ -470,7 +470,7 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
             font-size: 14px;
         }
 
-        
+
         @media(max-width:768px) {
             .content {
                 margin-left: 0;

@@ -6,12 +6,12 @@ if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] !== 'admin') {
     exit();
 }
 
-// Handle check-in action
-if(isset($_POST['action']) && $_POST['action'] === 'checkin' && isset($_POST['id_booking'])) {
+// check-in action
+if (isset($_POST['action']) && $_POST['action'] === 'checkin' && isset($_POST['id_booking'])) {
     $id_booking = intval($_POST['id_booking']);
     $id_admin = intval($_SESSION['id_user']);
-    
-    // Get booking details for logging
+
+    // booking details 
     $booking_query = "SELECT b.kode_booking, u.nama FROM booking b 
                       JOIN users u ON b.id_user = u.id_user 
                       WHERE b.id_booking = ?";
@@ -20,20 +20,20 @@ if(isset($_POST['action']) && $_POST['action'] === 'checkin' && isset($_POST['id
     $stmt_booking->execute();
     $booking_result = $stmt_booking->get_result();
     $booking_info = $booking_result->fetch_assoc();
-    
+
     // Update booking status to check-in
     $update_query = "UPDATE booking SET status_reservasi = 'check-in' WHERE id_booking = ?";
     $stmt_update = $conn->prepare($update_query);
-    
-    if($stmt_update) {
+
+    if ($stmt_update) {
         $stmt_update->bind_param("i", $id_booking);
-        
-        if($stmt_update->execute()) {
+
+        if ($stmt_update->execute()) {
             // Log aktivitas admin
             $log_query = "INSERT INTO log_aktivitas_admin (id_admin, aksi, deskripsi, created_at) VALUES (?, ?, ?, NOW())";
             $stmt_log = $conn->prepare($log_query);
-            
-            if($stmt_log) {
+
+            if ($stmt_log) {
                 $aksi = "Check-In Reservasi";
                 $kode_booking = $booking_info['kode_booking'] ?? $id_booking;
                 $nama_user = $booking_info['nama'] ?? 'User';
@@ -41,22 +41,22 @@ if(isset($_POST['action']) && $_POST['action'] === 'checkin' && isset($_POST['id
                 $stmt_log->bind_param("iss", $id_admin, $aksi, $deskripsi);
                 $stmt_log->execute();
             }
-            
+
             $_SESSION['success'] = "Check-in berhasil dikonfirmasi!";
         } else {
             $_SESSION['error'] = "Gagal melakukan check-in: " . $conn->error;
         }
     }
-    
+
     header("Location: detail_reservasi.php?id=" . $id_booking);
     exit();
 }
 
 // Handle checkout action  
-if(isset($_POST['action']) && $_POST['action'] === 'checkout' && isset($_POST['id_booking'])) {
+if (isset($_POST['action']) && $_POST['action'] === 'checkout' && isset($_POST['id_booking'])) {
     $id_booking = intval($_POST['id_booking']);
     $id_admin = intval($_SESSION['id_user']);
-    
+
     // Get booking details for logging
     $booking_query = "SELECT b.kode_booking, u.nama FROM booking b 
                       JOIN users u ON b.id_user = u.id_user 
@@ -66,20 +66,20 @@ if(isset($_POST['action']) && $_POST['action'] === 'checkout' && isset($_POST['i
     $stmt_booking->execute();
     $booking_result = $stmt_booking->get_result();
     $booking_info = $booking_result->fetch_assoc();
-    
+
     // Update booking status to selesai
     $update_query = "UPDATE booking SET status_reservasi = 'selesai' WHERE id_booking = ?";
     $stmt_update = $conn->prepare($update_query);
-    
-    if($stmt_update) {
+
+    if ($stmt_update) {
         $stmt_update->bind_param("i", $id_booking);
-        
-        if($stmt_update->execute()) {
+
+        if ($stmt_update->execute()) {
             // Log aktivitas admin
             $log_query = "INSERT INTO log_aktivitas_admin (id_admin, aksi, deskripsi, created_at) VALUES (?, ?, ?, NOW())";
             $stmt_log = $conn->prepare($log_query);
-            
-            if($stmt_log) {
+
+            if ($stmt_log) {
                 $aksi = "Check-Out Reservasi";
                 $kode_booking = $booking_info['kode_booking'] ?? $id_booking;
                 $nama_user = $booking_info['nama'] ?? 'User';
@@ -87,13 +87,13 @@ if(isset($_POST['action']) && $_POST['action'] === 'checkout' && isset($_POST['i
                 $stmt_log->bind_param("iss", $id_admin, $aksi, $deskripsi);
                 $stmt_log->execute();
             }
-            
+
             $_SESSION['success'] = "Check-out berhasil dikonfirmasi!";
         } else {
             $_SESSION['error'] = "Gagal melakukan check-out: " . $conn->error;
         }
     }
-    
+
     header("Location: detail_reservasi.php?id=" . $id_booking);
     exit();
 }
@@ -101,7 +101,7 @@ if(isset($_POST['action']) && $_POST['action'] === 'checkout' && isset($_POST['i
 // Get booking ID from URL
 $id_booking = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-if($id_booking <= 0) {
+if ($id_booking <= 0) {
     header("Location: ../dashboard.php");
     exit();
 }
@@ -131,7 +131,7 @@ $stmt->bind_param("i", $id_booking);
 $stmt->execute();
 $result = $stmt->get_result();
 
-if($result->num_rows === 0) {
+if ($result->num_rows === 0) {
     header("Location: ../dashboard.php");
     exit();
 }
@@ -140,43 +140,45 @@ $reservation = $result->fetch_assoc();
 
 // Fetch check-in details if status is check-in or selesai
 $checkin_data = null;
-if(in_array($reservation['status_reservasi'], ['check-in', 'selesai'])) {
+if (in_array($reservation['status_reservasi'], ['check-in', 'selesai'])) {
     $checkin_query = "SELECT * FROM checkin WHERE id_booking = ?";
     $stmt_checkin = $conn->prepare($checkin_query);
-    
+
     if ($stmt_checkin === false) {
         error_log("Error preparing checkin statement: " . $conn->error);
     } else {
         $stmt_checkin->bind_param("i", $id_booking);
         $stmt_checkin->execute();
         $checkin_result = $stmt_checkin->get_result();
-        if($checkin_result->num_rows > 0) {
+        if ($checkin_result->num_rows > 0) {
             $checkin_data = $checkin_result->fetch_assoc();
         }
     }
 }
 
 // Function to get status badge color
-function getStatusColor($status) {
-    switch($status) {
-        case 'dipesan': 
+function getStatusColor($status)
+{
+    switch ($status) {
+        case 'dipesan':
         case '':
             return 'bg-blue-100 text-blue-700 border-blue-200';
-        case 'check-in': 
+        case 'check-in':
             return 'bg-green-100 text-green-700 border-green-200';
-        case 'selesai': 
+        case 'selesai':
             return 'bg-gray-100 text-gray-700 border-gray-200';
-        case 'dibatalkan': 
+        case 'dibatalkan':
             return 'bg-red-100 text-red-700 border-red-200';
-        case 'menunggu_pembatalan': 
+        case 'menunggu_pembatalan':
             return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-        default: 
+        default:
             return 'bg-gray-100 text-gray-700';
     }
 }
 
 // Function to format currency
-function formatCurrency($amount) {
+function formatCurrency($amount)
+{
     return 'Rp ' . number_format($amount, 0, ',', '.');
 }
 
@@ -186,13 +188,15 @@ $display_status = empty($reservation['status_reservasi']) ? 'dipesan' : $reserva
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detail Reservasi - <?php echo htmlspecialchars($reservation['kode_booking']); ?></title>
-    
+
     <link rel="icon" type="image/jpeg" href="../../assets/img/logonw.png">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -201,7 +205,7 @@ $display_status = empty($reservation['status_reservasi']) ? 'dipesan' : $reserva
             margin: 0;
             padding: 0;
         }
-        
+
         body {
             font-family: 'Poppins', sans-serif;
             background: #fff7ed;
@@ -409,7 +413,7 @@ $display_status = empty($reservation['status_reservasi']) ? 'dipesan' : $reserva
             margin: 20px 0 8px 0;
         }
 
-        .penginapan-name + p {
+        .penginapan-name+p {
             font-size: 18px;
             font-weight: 700;
             color: #1f2937;
@@ -703,12 +707,14 @@ $display_status = empty($reservation['status_reservasi']) ? 'dipesan' : $reserva
             body {
                 background: white;
             }
+
             .back-btn,
             .header-actions,
             .action-buttons,
             .activity-log {
                 display: none;
             }
+
             .card {
                 box-shadow: none;
                 border: 1px solid #e5e7eb;
@@ -716,239 +722,255 @@ $display_status = empty($reservation['status_reservasi']) ? 'dipesan' : $reserva
         }
     </style>
 </head>
+
 <body>
 
-<div class="layout">
-    <?php include '../partials/sidebar.php'; ?>
+    <div class="layout">
+        <?php include '../partials/sidebar.php'; ?>
 
-    <div class="content">
-        <div class="topbar">
-            <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-            <a href="../dashboard.php" class="back-btn">
-                <i class="bi bi-chevron-left"></i>
-                Kembali ke Dashboard
-            </a>
-        </div>
-
-        <div>
-            <h1>Detail Reservasi</h1>
-            <div class="header-actions">
-                <button onclick="window.print()" class="btn btn-outline">
-                    <i class="bi bi-printer"></i> Cetak Invoice
-                </button>
+        <div class="content">
+            <div class="topbar">
+                <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+                <a href="../dashboard.php" class="back-btn">
+                    <i class="bi bi-chevron-left"></i>
+                    Kembali ke Dashboard
+                </a>
             </div>
-        </div>
 
-        <div class="detail-grid">
-            
-            <!-- Main Content Column -->
             <div>
-                
-                <!-- Card: Informasi Reservasi -->
-                <div class="card">
-                    <div class="card-header">
-                        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 15px;">
-                            <div>
-                                <h2>Informasi Reservasi</h2>
-                                <p>Dibuat pada <?php echo date('d M Y, H:i', strtotime($reservation['created_at'])); ?></p>
-                            </div>
-                            <span class="status-badge <?php echo $display_status; ?>">
-                                <?php echo str_replace('_', ' ', strtoupper($display_status)); ?>
-                            </span>
-                        </div>
-                    </div>
+                <h1>Detail Reservasi</h1>
+                <div class="header-actions">
+                    <button onclick="window.print()" class="btn btn-outline">
+                        <i class="bi bi-printer"></i> Cetak Invoice
+                    </button>
+                </div>
+            </div>
 
-                    <div class="card-body">
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Kode Booking</span>
-                                <span class="info-value code"><?php echo htmlspecialchars($reservation['kode_booking']); ?></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">ID Booking</span>
-                                <span class="info-value">#<?php echo $reservation['id_booking']; ?></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">ID User</span>
-                                <span class="info-value">USR-<?php echo $reservation['id_user']; ?></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">ID Penginapan</span>
-                                <span class="info-value">H-00<?php echo $reservation['id_penginapan']; ?></span>
+            <div class="detail-grid">
+
+                <!-- Main Content Column -->
+                <div>
+
+                    <!-- Card: Informasi Reservasi -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 15px;">
+                                <div>
+                                    <h2>Informasi Reservasi</h2>
+                                    <p>Dibuat pada
+                                        <?php echo date('d M Y, H:i', strtotime($reservation['created_at'])); ?></p>
+                                </div>
+                                <span class="status-badge <?php echo $display_status; ?>">
+                                    <?php echo str_replace('_', ' ', strtoupper($display_status)); ?>
+                                </span>
                             </div>
                         </div>
 
-                        <div class="penginapan-name">Penginapan</div>
-                        <p><?php echo htmlspecialchars($reservation['nama_penginapan']); ?></p>
-
-                        <div class="detail-row">
-                            <div class="detail-col">
-                                <div class="detail-item">
-                                    <div class="icon-box blue">
-                                        <i class="bi bi-calendar-check"></i>
-                                    </div>
-                                    <div class="detail-text">
-                                        <div class="detail-label">Check-In</div>
-                                        <div class="detail-value"><?php echo date('d M Y', strtotime($reservation['tanggal_checkin'])); ?></div>
-                                    </div>
+                        <div class="card-body">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">Kode Booking</span>
+                                    <span
+                                        class="info-value code"><?php echo htmlspecialchars($reservation['kode_booking']); ?></span>
                                 </div>
-                                <div class="detail-item">
-                                    <div class="icon-box orange">
-                                        <i class="bi bi-calendar-x"></i>
-                                    </div>
-                                    <div class="detail-text">
-                                        <div class="detail-label">Check-Out</div>
-                                        <div class="detail-value"><?php echo date('d M Y', strtotime($reservation['tanggal_checkout'])); ?></div>
-                                    </div>
+                                <div class="info-item">
+                                    <span class="info-label">ID Booking</span>
+                                    <span class="info-value">#<?php echo $reservation['id_booking']; ?></span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">ID User</span>
+                                    <span class="info-value">USR-<?php echo $reservation['id_user']; ?></span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">ID Penginapan</span>
+                                    <span class="info-value">H-00<?php echo $reservation['id_penginapan']; ?></span>
                                 </div>
                             </div>
 
-                            <div class="detail-col">
-                                <div class="detail-item">
-                                    <div class="icon-box purple">
-                                        <i class="bi bi-door-open"></i>
+                            <div class="penginapan-name">Penginapan</div>
+                            <p><?php echo htmlspecialchars($reservation['nama_penginapan']); ?></p>
+
+                            <div class="detail-row">
+                                <div class="detail-col">
+                                    <div class="detail-item">
+                                        <div class="icon-box blue">
+                                            <i class="bi bi-calendar-check"></i>
+                                        </div>
+                                        <div class="detail-text">
+                                            <div class="detail-label">Check-In</div>
+                                            <div class="detail-value">
+                                                <?php echo date('d M Y', strtotime($reservation['tanggal_checkin'])); ?>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="detail-text">
-                                        <div class="detail-label">Tipe Kamar</div>
-                                        <div class="detail-value"><?php echo htmlspecialchars($reservation['nama_tipe']); ?> (<?php echo $reservation['jumlah_kamar']; ?> Kamar)</div>
+                                    <div class="detail-item">
+                                        <div class="icon-box orange">
+                                            <i class="bi bi-calendar-x"></i>
+                                        </div>
+                                        <div class="detail-text">
+                                            <div class="detail-label">Check-Out</div>
+                                            <div class="detail-value">
+                                                <?php echo date('d M Y', strtotime($reservation['tanggal_checkout'])); ?>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="detail-item">
-                                    <div class="icon-box green">
-                                        <i class="bi bi-people"></i>
+
+                                <div class="detail-col">
+                                    <div class="detail-item">
+                                        <div class="icon-box purple">
+                                            <i class="bi bi-door-open"></i>
+                                        </div>
+                                        <div class="detail-text">
+                                            <div class="detail-label">Tipe Kamar</div>
+                                            <div class="detail-value">
+                                                <?php echo htmlspecialchars($reservation['nama_tipe']); ?>
+                                                (<?php echo $reservation['jumlah_kamar']; ?> Kamar)</div>
+                                        </div>
                                     </div>
-                                    <div class="detail-text">
-                                        <div class="detail-label">Kapasitas</div>
-                                        <div class="detail-value"><?php echo $reservation['jumlah_orang']; ?> Orang</div>
+                                    <div class="detail-item">
+                                        <div class="icon-box green">
+                                            <i class="bi bi-people"></i>
+                                        </div>
+                                        <div class="detail-text">
+                                            <div class="detail-label">Kapasitas</div>
+                                            <div class="detail-value"><?php echo $reservation['jumlah_orang']; ?> Orang
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Sidebar Column -->
-            <div>
-                <div class="card sidebar-card">
-                    <div class="card-header">
-                        <h2><i class="bi bi-credit-card" style="color: #9ca3af;"></i> Ringkasan Pembayaran</h2>
-                    </div>
-                    
-                    <div class="card-body">
-                        <?php 
-                        $subtotal = $reservation['total_harga'] * 0.9;
-                        $pajak = $reservation['total_harga'] * 0.1;
-                        ?>
-                        
-                        <div class="payment-summary">
-                            <div class="payment-row">
-                                <span class="label">Harga Kamar (x<?php echo $reservation['jumlah_kamar']; ?>)</span>
-                                <span class="value"><?php echo formatCurrency($subtotal); ?></span>
-                            </div>
-                            <div class="payment-row">
-                                <span class="label">Pajak & Layanan</span>
-                                <span class="value"><?php echo formatCurrency($pajak); ?></span>
-                            </div>
-                            <div class="payment-row total">
-                                <span class="label">Total Harga</span>
-                                <span class="value"><?php echo formatCurrency($reservation['total_harga']); ?></span>
-                            </div>
+                <!-- Sidebar Column -->
+                <div>
+                    <div class="card sidebar-card">
+                        <div class="card-header">
+                            <h2><i class="bi bi-credit-card" style="color: #9ca3af;"></i> Ringkasan Pembayaran</h2>
                         </div>
 
-                        <?php if($display_status === 'dipesan'): ?>
-                        <div class="action-buttons">
-                            <form method="POST" id="checkinForm">
-                                <input type="hidden" name="action" value="checkin">
-                                <input type="hidden" name="id_booking" value="<?php echo $id_booking; ?>">
-                                <button type="button" class="btn btn-primary" onclick="confirmCheckin()">
-                                    <i class="bi bi-check-lg"></i> Konfirmasi Check-In
-                                </button>
-                            </form>
-                        </div>
-                        <?php elseif($display_status === 'check-in'): ?>
-                        <div class="action-buttons">
-                            <form method="POST" id="checkoutForm">
-                                <input type="hidden" name="action" value="checkout">
-                                <input type="hidden" name="id_booking" value="<?php echo $id_booking; ?>">
-                                <button type="button" class="btn btn-success" onclick="confirmCheckout()">
-                                    <i class="bi bi-door-open"></i> Proses Check-Out
-                                </button>
-                            </form>
-                        </div>
-                        <?php endif; ?>
+                        <div class="card-body">
+                            <?php
+                            $subtotal = $reservation['total_harga'] * 0.9;
+                            $pajak = $reservation['total_harga'] * 0.1;
+                            ?>
 
-                        <div class="user-info">
-                            <div class="user-card">
-                                <div class="user-avatar">
-                                    <i class="bi bi-person"></i>
+                            <div class="payment-summary">
+                                <div class="payment-row">
+                                    <span class="label">Harga Kamar
+                                        (x<?php echo $reservation['jumlah_kamar']; ?>)</span>
+                                    <span class="value"><?php echo formatCurrency($subtotal); ?></span>
                                 </div>
-                                <div class="user-details">
-                                    <p class="user-name"><?php echo htmlspecialchars($reservation['nama_user']); ?></p>
-                                    <p class="user-id"><?php echo htmlspecialchars($reservation['email_user']); ?></p>
+                                <div class="payment-row">
+                                    <span class="label">Pajak & Layanan</span>
+                                    <span class="value"><?php echo formatCurrency($pajak); ?></span>
+                                </div>
+                                <div class="payment-row total">
+                                    <span class="label">Total Harga</span>
+                                    <span
+                                        class="value"><?php echo formatCurrency($reservation['total_harga']); ?></span>
                                 </div>
                             </div>
+
+                            <?php if ($display_status === 'dipesan'): ?>
+                                <div class="action-buttons">
+                                    <form method="POST" id="checkinForm">
+                                        <input type="hidden" name="action" value="checkin">
+                                        <input type="hidden" name="id_booking" value="<?php echo $id_booking; ?>">
+                                        <button type="button" class="btn btn-primary" onclick="confirmCheckin()">
+                                            <i class="bi bi-check-lg"></i> Konfirmasi Check-In
+                                        </button>
+                                    </form>
+                                </div>
+                            <?php elseif ($display_status === 'check-in'): ?>
+                                <div class="action-buttons">
+                                    <form method="POST" id="checkoutForm">
+                                        <input type="hidden" name="action" value="checkout">
+                                        <input type="hidden" name="id_booking" value="<?php echo $id_booking; ?>">
+                                        <button type="button" class="btn btn-success" onclick="confirmCheckout()">
+                                            <i class="bi bi-door-open"></i> Proses Check-Out
+                                        </button>
+                                    </form>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="user-info">
+                                <div class="user-card">
+                                    <div class="user-avatar">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+                                    <div class="user-details">
+                                        <p class="user-name"><?php echo htmlspecialchars($reservation['nama_user']); ?>
+                                        </p>
+                                        <p class="user-id"><?php echo htmlspecialchars($reservation['email_user']); ?>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Activity Log -->
-                <div class="activity-log">
-                    <h4 class="activity-title">Aktivitas Terakhir</h4>
-                    <div class="activity-list">
-                        <div class="activity-item">
-                            <div class="activity-dot blue"></div>
-                            <div class="activity-content">
-                                <p class="activity-title-text">Reservasi Dibuat</p>
-                                <p class="activity-time"><?php echo date('d M, H:i', strtotime($reservation['created_at'])); ?></p>
+                    <!-- Activity Log -->
+                    <div class="activity-log">
+                        <h4 class="activity-title">Aktivitas Terakhir</h4>
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <div class="activity-dot blue"></div>
+                                <div class="activity-content">
+                                    <p class="activity-title-text">Reservasi Dibuat</p>
+                                    <p class="activity-time">
+                                        <?php echo date('d M, H:i', strtotime($reservation['created_at'])); ?></p>
+                                </div>
                             </div>
+                            <?php if ($display_status === 'check-in' || $display_status === 'selesai'): ?>
+                                <div class="activity-item">
+                                    <div class="activity-dot green"></div>
+                                    <div class="activity-content">
+                                        <p class="activity-title-text">Check-In Berhasil</p>
+                                        <p class="activity-time">Dikonfirmasi oleh Admin</p>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                            <?php if ($display_status === 'selesai'): ?>
+                                <div class="activity-item">
+                                    <div class="activity-dot gray"></div>
+                                    <div class="activity-content">
+                                        <p class="activity-title-text">Reservasi Selesai</p>
+                                        <p class="activity-time">Check-out berhasil</p>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                            <?php if ($display_status === 'dibatalkan'): ?>
+                                <div class="activity-item">
+                                    <div class="activity-dot red"></div>
+                                    <div class="activity-content">
+                                        <p class="activity-title-text">Reservasi Dibatalkan</p>
+                                        <p class="activity-time">Oleh Admin</p>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         </div>
-                        <?php if($display_status === 'check-in' || $display_status === 'selesai'): ?>
-                        <div class="activity-item">
-                            <div class="activity-dot green"></div>
-                            <div class="activity-content">
-                                <p class="activity-title-text">Check-In Berhasil</p>
-                                <p class="activity-time">Dikonfirmasi oleh Admin</p>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                        <?php if($display_status === 'selesai'): ?>
-                        <div class="activity-item">
-                            <div class="activity-dot gray"></div>
-                            <div class="activity-content">
-                                <p class="activity-title-text">Reservasi Selesai</p>
-                                <p class="activity-time">Check-out berhasil</p>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                        <?php if($display_status === 'dibatalkan'): ?>
-                        <div class="activity-item">
-                            <div class="activity-dot red"></div>
-                            <div class="activity-content">
-                                <p class="activity-title-text">Reservasi Dibatalkan</p>
-                                <p class="activity-time">Oleh Admin</p>
-                            </div>
-                        </div>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    if(sidebar) {
-        sidebar.classList.toggle('active');
-    }
-}
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('active');
+            }
+        }
 
-function confirmCheckin() {
-    Swal.fire({
-        title: 'Konfirmasi Check-In?',
-        html: `
+        function confirmCheckin() {
+            Swal.fire({
+                title: 'Konfirmasi Check-In?',
+                html: `
             <div style="text-align: left; padding: 15px;">
                 <p style="margin-bottom: 10px;">Pastikan tamu sudah tiba di lokasi dan siap untuk check-in.</p>
                 <div style="background: #dbeafe; padding: 12px; border-radius: 8px; border-left: 4px solid #3b82f6;">
@@ -958,24 +980,24 @@ function confirmCheckin() {
                 </div>
             </div>
         `,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3b82f6',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: '✓ Ya, Konfirmasi Check-In',
-        cancelButtonText: 'Batal',
-        reverseButtons: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('checkinForm').submit();
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '✓ Ya, Konfirmasi Check-In',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('checkinForm').submit();
+                }
+            });
         }
-    });
-}
 
-function confirmCheckout() {
-    Swal.fire({
-        title: 'Konfirmasi Check-Out?',
-        html: `
+        function confirmCheckout() {
+            Swal.fire({
+                title: 'Konfirmasi Check-Out?',
+                html: `
             <div style="text-align: left; padding: 15px;">
                 <p style="margin-bottom: 10px;">Pastikan tamu sudah menyelesaikan proses check-out.</p>
                 <div style="background: #d1fae5; padding: 12px; border-radius: 8px; border-left: 4px solid #10b981;">
@@ -985,41 +1007,42 @@ function confirmCheckout() {
                 </div>
             </div>
         `,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#10b981',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: '✓ Ya, Konfirmasi Check-Out',
-        cancelButtonText: 'Batal',
-        reverseButtons: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('checkoutForm').submit();
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '✓ Ya, Konfirmasi Check-Out',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('checkoutForm').submit();
+                }
+            });
         }
-    });
-}
 
-// Show success/error messages
-<?php if(isset($_SESSION['success'])): ?>
-    Swal.fire({
-        icon: 'success',
-        title: 'Berhasil!',
-        text: '<?php echo $_SESSION['success']; ?>',
-        confirmButtonColor: '#10b981'
-    });
-    <?php unset($_SESSION['success']); ?>
-<?php endif; ?>
+        // sukses/error 
+        <?php if (isset($_SESSION['success'])): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: '<?php echo $_SESSION['success']; ?>',
+                confirmButtonColor: '#10b981'
+            });
+            <?php unset($_SESSION['success']); ?>
+        <?php endif; ?>
 
-<?php if(isset($_SESSION['error'])): ?>
-    Swal.fire({
-        icon: 'error',
-        title: 'Error!',
-        text: '<?php echo $_SESSION['error']; ?>',
-        confirmButtonColor: '#ef4444'
-    });
-    <?php unset($_SESSION['error']); ?>
-<?php endif; ?>
-</script>
+        <?php if (isset($_SESSION['error'])): ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: '<?php echo $_SESSION['error']; ?>',
+                confirmButtonColor: '#ef4444'
+            });
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
+    </script>
 
 </body>
+
 </html>

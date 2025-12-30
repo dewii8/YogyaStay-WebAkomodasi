@@ -2,7 +2,7 @@
 require_once '../../config.php';
 require_once '../log/functions.php';
 
-session_start(); // pastikan session sudah dimulai
+session_start();
 
 // Pastikan ID dikirim
 if (!isset($_GET['id'])) {
@@ -37,7 +37,7 @@ if (!$delete) {
 
 // Tambah log aktivitas admin
 $aksi = "Hapus Blog";
-$deskripsi = "Admin ID ".$_SESSION['user_id']." menghapus blog ID $id_blog berjudul '".$blog['judul']."'";
+$deskripsi = "Admin ID " . $_SESSION['user_id'] . " menghapus blog ID $id_blog berjudul '" . $blog['judul'] . "'";
 addAdminLog($conn, $_SESSION['user_id'], $aksi, $deskripsi);
 
 // Redirect kembali
