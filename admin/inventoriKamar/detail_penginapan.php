@@ -19,7 +19,7 @@ if ($id_penginapan <= 0) {
     exit;
 }
 
-// Query detail penginapan
+// detail penginapan
 $sql = "SELECT p.*, kc.nama_kecamatan, kb.nama_kabupaten
         FROM penginapan p
         LEFT JOIN kecamatan kc ON p.id_kecamatan = kc.id_kecamatan
@@ -39,7 +39,7 @@ if (mysqli_num_rows($result) == 0) {
 
 $penginapan = mysqli_fetch_assoc($result);
 
-// Query gambar penginapan
+// gambar penginapan
 $sql_gambar = "SELECT * FROM gambar_penginapan WHERE id_penginapan = $id_penginapan ORDER BY is_thumbnail DESC";
 $result_gambar = mysqli_query($conn, $sql_gambar);
 
@@ -47,7 +47,7 @@ if (!$result_gambar) {
     die("Error query gambar: " . mysqli_error($conn));
 }
 
-// Query tipe kamar 
+// tipe kamar 
 $sql_kamar = "SELECT tk.*
               FROM tipe_kamar tk 
               WHERE tk.id_penginapan = $id_penginapan 
@@ -58,7 +58,7 @@ if (!$result_kamar) {
     die("Error query tipe kamar: " . mysqli_error($conn));
 }
 
-// Query fasilitas
+// fasilitas
 $sql_fasilitas = "SELECT f.* 
                   FROM fasilitas f
                   INNER JOIN penginapan_fasilitas pf ON f.id_fasilitas = pf.id_fasilitas
@@ -69,7 +69,7 @@ if (!$result_fasilitas) {
     die("Error query fasilitas: " . mysqli_error($conn));
 }
 
-// Query kontak
+// kontak
 $sql_kontak = "SELECT * FROM kontak_penginapan WHERE id_penginapan = $id_penginapan";
 $result_kontak = mysqli_query($conn, $sql_kontak);
 
@@ -579,8 +579,7 @@ body {
                     $gambar_array[] = $img['path_gambar'];
                 }
             }
-            
-            // default gambar jika tidak ada upload gambar
+
             if (empty($gambar_array)) {
                 $gambar_array = ['uploads/penginapan/default.jpg'];
             }
@@ -692,7 +691,7 @@ body {
                     mysqli_data_seek($result_fasilitas, 0);
                     while($fas = mysqli_fetch_assoc($result_fasilitas)) { 
                         // Cari icon yang cocok berdasarkan nama fasilitas
-                        $icon_class = 'bi-star'; // default icon
+                        $icon_class = 'bi-star'; 
                         foreach ($icon_map as $key => $icon) {
                             if (stripos($fas['nama_fasilitas'], $key) !== false) {
                                 $icon_class = $icon;
