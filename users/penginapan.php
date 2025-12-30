@@ -45,7 +45,7 @@ $offset = ($page - 1) * $items_per_page;
 // Cek apakah sedang melakukan filtering
 $isFiltering = !empty($kabupaten) || !empty($kecamatan) || ($kategori !== 'semua') || (!empty($harga_min) && !empty($harga_max));
 
-/* ================= QUERY ================= */
+/* ================= QUERY DENGAN KETERSEDIAAN KAMAR REAL-TIME ================= */
 // Build WHERE clause
 $where_clause = "WHERE 1=1";
 
@@ -69,60 +69,105 @@ if ($harga_min !== null && $harga_max !== null) {
     $where_clause .= " AND p.harga_mulai BETWEEN $harga_min AND $harga_max";
 }
 
-// Filter berdasarkan kapasitas kamar & orang
+// ========= SUBQUERY UNTUK KETERSEDIAAN KAMAR =========
+$availability_subquery = "
+    SELECT 
+        tk.id_penginapan,
+        SUM(tk.jumlah_kamar) as total_kamar_penginapan,
+        SUM(
+            tk.jumlah_kamar - COALESCE(
+                (SELECT SUM(b.jumlah_kamar) 
+                 FROM booking b 
+                 WHERE b.id_tipe_kamar = tk.id_tipe_kamar 
+                 AND b.status_reservasi IN ('dipesan', 'check-in')
+                 AND b.tanggal_checkout > CURDATE()
+                ), 0
+            )
+        ) as total_kamar_tersedia,
+        MAX(tk.kapasitas_orang) as max_kapasitas_penginapan
+    FROM tipe_kamar tk
+    GROUP BY tk.id_penginapan
+";
+
+// Filter berdasarkan kapasitas kamar & orang dengan ketersediaan real-time
 $having_clause = "";
+$having_clause_for_count = "";
 if ($rooms > 0 || $adults > 0 || $children > 0) {
     $total_guests = $adults + $children;
 
     $having_conditions = [];
+    $having_conditions_count = [];
 
+    // Filter: hanya tampilkan penginapan yang memiliki kamar tersedia >= jumlah kamar yang dicari
     if ($rooms > 0) {
-        $having_conditions[] = "SUM(tk.jumlah_kamar) >= $rooms";
+        $having_conditions[] = "av.total_kamar_tersedia >= $rooms";
+        $having_conditions_count[] = "total_kamar_tersedia >= $rooms";
     }
 
+    // Filter: hanya tampilkan penginapan yang kapasitas orangnya mencukupi
     if ($total_guests > 0) {
-        $having_conditions[] = "MAX(tk.kapasitas_orang) >= $total_guests";
+        $having_conditions[] = "av.max_kapasitas_penginapan >= $total_guests";
+        $having_conditions_count[] = "max_kapasitas_penginapan >= $total_guests";
     }
 
     if (!empty($having_conditions)) {
         $having_clause = " HAVING " . implode(" AND ", $having_conditions);
+        $having_clause_for_count = " HAVING " . implode(" AND ", $having_conditions_count);
     }
 }
 
 // Count total results untuk pagination
-$count_sql = "SELECT COUNT(DISTINCT p.id_penginapan) as total 
-              FROM penginapan p
-              JOIN kecamatan kc ON p.id_kecamatan = kc.id_kecamatan
-              LEFT JOIN tipe_kamar tk ON p.id_penginapan = tk.id_penginapan
-              $where_clause";
-
-if ($having_clause) {
+if (!empty($having_clause_for_count)) {
+    // Jika ada filter ketersediaan, harus menggunakan subquery lengkap
     $count_sql = "SELECT COUNT(*) as total FROM (
-                    SELECT p.id_penginapan
+                    SELECT p.id_penginapan,
+                    SUM(tk.jumlah_kamar) as total_kamar_penginapan,
+                    SUM(
+                        tk.jumlah_kamar - COALESCE(
+                            (SELECT SUM(b.jumlah_kamar) 
+                             FROM booking b 
+                             WHERE b.id_tipe_kamar = tk.id_tipe_kamar 
+                             AND b.status_reservasi IN ('dipesan', 'check-in')
+                             AND b.tanggal_checkout > CURDATE()
+                            ), 0
+                        )
+                    ) as total_kamar_tersedia,
+                    MAX(tk.kapasitas_orang) as max_kapasitas_penginapan
                     FROM penginapan p
                     JOIN kecamatan kc ON p.id_kecamatan = kc.id_kecamatan
                     LEFT JOIN tipe_kamar tk ON p.id_penginapan = tk.id_penginapan
                     $where_clause
                     GROUP BY p.id_penginapan
-                    $having_clause
+                    $having_clause_for_count
                   ) as filtered";
+} else {
+    // Jika tidak ada filter ketersediaan, query lebih sederhana
+    $count_sql = "SELECT COUNT(DISTINCT p.id_penginapan) as total 
+                  FROM penginapan p
+                  JOIN kecamatan kc ON p.id_kecamatan = kc.id_kecamatan
+                  $where_clause";
 }
 
 $count_result = mysqli_query($conn, $count_sql);
+if (!$count_result) {
+    die("Error count query: " . mysqli_error($conn));
+}
 $count_row = mysqli_fetch_assoc($count_result);
 $total_results = $count_row['total'];
 $total_pages = ceil($total_results / $items_per_page);
 
-// Main query dengan JOIN ke tipe_kamar dan fasilitas
+// Main query dengan JOIN ke tipe_kamar, fasilitas, dan availability
 $sql = "SELECT p.*, kc.nama_kecamatan,
         GROUP_CONCAT(DISTINCT tk.nama_tipe SEPARATOR ', ') as tipe_kamar_list,
-        SUM(tk.jumlah_kamar) as total_kamar,
-        MAX(tk.kapasitas_orang) as max_kapasitas,
+        av.total_kamar_penginapan as total_kamar,
+        av.total_kamar_tersedia as kamar_tersedia,
+        av.max_kapasitas_penginapan as max_kapasitas,
         GROUP_CONCAT(DISTINCT f.nama_fasilitas SEPARATOR '|') as fasilitas_list,
         (SELECT path_gambar FROM gambar_penginapan WHERE id_penginapan = p.id_penginapan ORDER BY is_thumbnail DESC LIMIT 1) as gambar_thumbnail
         FROM penginapan p
         JOIN kecamatan kc ON p.id_kecamatan = kc.id_kecamatan
         LEFT JOIN tipe_kamar tk ON p.id_penginapan = tk.id_penginapan
+        LEFT JOIN ($availability_subquery) av ON p.id_penginapan = av.id_penginapan
         LEFT JOIN penginapan_fasilitas pf ON p.id_penginapan = pf.id_penginapan
         LEFT JOIN fasilitas f ON pf.id_fasilitas = f.id_fasilitas
         $where_clause
@@ -152,7 +197,7 @@ if (!$result) {
 }
 
 $current_results = mysqli_num_rows($result);
-$showing_start = $offset + 1;
+$showing_start = $total_results > 0 ? $offset + 1 : 0;
 $showing_end = min($offset + $items_per_page, $total_results);
 
 // Include header
@@ -775,6 +820,36 @@ require_once 'header.php';
         font-weight: 600;
         color: #555;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ========= BADGE KETERSEDIAAN ========= */
+    .availability-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .availability-badge.available {
+        background: #10b981;
+        color: white;
+    }
+
+    .availability-badge.limited {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .availability-badge.full {
+        background: #ef4444;
+        color: white;
     }
 
     .card-body {
@@ -1441,7 +1516,7 @@ require_once 'header.php';
             <?php
             if (mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
-                    // Mapping fasilitas ke ikon - SAMA PERSIS DENGAN BERANDA
+                    // Mapping fasilitas ke ikon
                     $icon_map = [
                         'WiFi' => 'bi-wifi',
                         'AC' => 'bi-snow',
@@ -1460,10 +1535,37 @@ require_once 'header.php';
                         'Gym' => 'bi-person-arms-up',
                         'Meeting Room' => 'bi-people'
                     ];
+
+                    // Tentukan status ketersediaan
+                    $kamar_tersedia = intval($row['kamar_tersedia']);
+                    $total_kamar = intval($row['total_kamar']);
+                    
+                    // Tentukan badge dan status
+                    if ($kamar_tersedia <= 0) {
+                        $badge_class = 'full';
+                        $badge_text = 'Penuh';
+                        $badge_icon = 'bi-x-circle-fill';
+                    } elseif ($kamar_tersedia <= ceil($total_kamar * 0.3)) { // 30% atau kurang
+                        $badge_class = 'limited';
+                        $badge_text = 'Terbatas';
+                        $badge_icon = 'bi-exclamation-circle-fill';
+                    } else {
+                        $badge_class = 'available';
+                        $badge_text = 'Tersedia';
+                        $badge_icon = 'bi-check-circle-fill';
+                    }
                     ?>
                     <div class="card">
                         <div class="card-image">
                             <img src="../<?= $row['gambar_thumbnail'] ?>" alt="<?= $row['nama_penginapan'] ?>">
+                            
+                            <!-- Badge Ketersediaan -->
+                            <div class="availability-badge <?= $badge_class ?>">
+                                <i class="bi <?= $badge_icon ?>"></i>
+                                <span><?= $kamar_tersedia ?> kamar</span>
+                            </div>
+                            
+                            <!-- Badge Tipe -->
                             <span class="badge"><?= ucfirst($row['tipe_penginapan']) ?></span>
                         </div>
                         <div class="card-body">
@@ -1473,7 +1575,7 @@ require_once 'header.php';
                                 <?= $row['nama_kecamatan'] ?>, Yogyakarta
                             </p>
 
-                            <!-- Bagian Fasilitas/Amenities yang diperbarui -->
+                            <!-- Bagian Fasilitas/Amenities -->
                             <div class="card-amenities">
                                 <?php
                                 $prioritas_fasilitas = ['WiFi', 'AC', 'TV'];
@@ -1499,7 +1601,7 @@ require_once 'header.php';
                                         }
                                     }
 
-                                    // Tampilkan fasilitas dengan format yang sama seperti di beranda
+                                    // Tampilkan fasilitas
                                     foreach ($fasilitas_ditampilkan as $nama_fasilitas) {
                                         $icon_class = isset($icon_map[$nama_fasilitas])
                                             ? $icon_map[$nama_fasilitas]
