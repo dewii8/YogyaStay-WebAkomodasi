@@ -139,6 +139,10 @@ $page_title = 'Check-in Online';
 require_once 'header.php';
 ?>
 
+<!-- SweetAlert2 CSS & JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <style>
     /* ========= MAIN WRAPPER ========= */
     .checkin-wrapper {
@@ -413,6 +417,28 @@ require_once 'header.php';
         color: #065f46;
         border: 2px solid #a7f3d0;
     }
+
+    /* ========= CUSTOM SWAL STYLING ========= */
+    .swal2-popup {
+        border-radius: 20px;
+        padding: 30px;
+    }
+
+    .swal2-icon.swal2-warning {
+        border-color: #f5a742;
+        color: #f5a742;
+    }
+
+    .swal2-styled.swal2-confirm {
+        background-color: #8da6daff !important;
+        border-radius: 10px;
+        padding: 10px 30px;
+        font-weight: 600;
+    }
+
+    .swal2-styled.swal2-confirm:hover {
+        background-color: #5073b8ff !important;
+    }
 </style>
 
 <div class="checkin-wrapper">
@@ -465,13 +491,12 @@ require_once 'header.php';
                         <?= htmlspecialchars($booking['nama_tipe'] ?? 'Standard Room') ?></div>
                 </div>
 
-                <form method="POST" enctype="multipart/form-data">
+                <form method="POST" enctype="multipart/form-data" id="checkinForm">
                     <div class="upload-section">
                         <div class="upload-title">Lengkapi Data Verifikasi:</div>
 
                         <div class="file-input-wrapper">
-                            <input type="file" name="foto_ktp" id="foto_ktp" class="file-input" accept=".jpg,.jpeg,.png"
-                                required>
+                            <input type="file" name="foto_ktp" id="foto_ktp" class="file-input" accept=".jpg,.jpeg,.png">
                             <label for="foto_ktp" class="file-label">
                                 <i class="bi bi-file-earmark-arrow-up"></i>
                                 <span id="file-label-text">Pilih File KTP/Passport</span>
@@ -509,6 +534,75 @@ require_once 'header.php';
         } else {
             document.getElementById('file-label-text').textContent = 'Pilih File KTP/Passport';
         }
+    });
+
+    // Validasi form check-in dengan SweetAlert
+    document.getElementById('checkinForm')?.addEventListener('submit', function (e) {
+        e.preventDefault(); // Prevent default form submission
+
+        const fileInput = document.getElementById('foto_ktp');
+        const file = fileInput.files[0];
+
+        // Cek apakah file KTP sudah dipilih
+        if (!file) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'KTP/Passport Wajib Diupload!',
+                html: '<p style="font-size: 15px; color: #666; line-height: 1.6;">Untuk keamanan dan verifikasi identitas, Anda <strong>wajib mengunggah foto KTP atau Passport</strong> sebelum melakukan check-in.</p>',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#8da6daff',
+                allowOutsideClick: false,
+                customClass: {
+                    popup: 'swal-custom-popup',
+                    confirmButton: 'swal-custom-confirm'
+                }
+            });
+            return false;
+        }
+
+        // Validasi ukuran file (Max 2MB)
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        if (file.size > maxSize) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Ukuran File Terlalu Besar!',
+                html: '<p style="font-size: 15px; color: #666; line-height: 1.6;">Ukuran file tidak boleh lebih dari <strong>2MB</strong>. Silakan kompres atau pilih file yang lebih kecil.</p>',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#8da6daff'
+            });
+            return false;
+        }
+
+        // Validasi tipe file
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!allowedTypes.includes(file.type)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Format File Tidak Valid!',
+                html: '<p style="font-size: 15px; color: #666; line-height: 1.6;">Hanya file dengan format <strong>JPG, JPEG, atau PNG</strong> yang diperbolehkan.</p>',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#8da6daff'
+            });
+            return false;
+        }
+
+        // Jika semua validasi lolos, tampilkan konfirmasi
+        Swal.fire({
+            icon: 'question',
+            title: 'Konfirmasi Check-in',
+            html: '<p style="font-size: 15px; color: #666; line-height: 1.6;">Apakah Anda yakin data yang diupload sudah benar dan ingin melanjutkan proses check-in?</p>',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Check-in Sekarang',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#8da6daff',
+            cancelButtonColor: '#dc2626',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Submit form jika user konfirmasi
+                e.target.submit();
+            }
+        });
     });
 </script>
 
