@@ -24,8 +24,8 @@ $total_booking = getTotal($conn, "
 
 $total_refund = getTotal($conn, "
     SELECT COUNT(*) AS total 
-    FROM refund 
-    WHERE status_refund='diproses'
+    FROM pembatalan 
+    WHERE status_pembatalan='diproses'
 ");
 
 $pendapatan = getTotal($conn, "
