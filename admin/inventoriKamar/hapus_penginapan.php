@@ -20,10 +20,10 @@ if (isset($_GET['id'])) {
     $sqlPenginapan = "DELETE FROM penginapan WHERE id_penginapan = '$id_penginapan'";
     mysqli_query($conn, $sqlPenginapan);
 
-    header("Location: inventori.php?tipe=hotel"); 
+    header("Location: inventori.php?tipe=hotel");
     exit;
 } else {
-    header("Location: inventori.php?tipe=hotel"); 
+    header("Location: inventori.php?tipe=hotel");
 }
 ?>
 +

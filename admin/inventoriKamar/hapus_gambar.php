@@ -17,32 +17,29 @@ if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] !== 'admin') {
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_gambar'])) {
-    
+
     $id_gambar = intval($_POST['id_gambar']);
-    
+
     try {
-        // Ambil path gambar dari database
         $query = "SELECT path_gambar FROM gambar_penginapan WHERE id_gambar = $id_gambar";
         $result = mysqli_query($conn, $query);
-        
+
         if (!$result || mysqli_num_rows($result) === 0) {
             echo json_encode(['success' => false, 'message' => 'Gambar tidak ditemukan']);
             exit;
         }
-        
+
         $row = mysqli_fetch_assoc($result);
         $path_gambar = $row['path_gambar'];
-        
-        // Hapus file fisik dari server
+
         $full_path = "../../" . $path_gambar;
         if (file_exists($full_path)) {
             unlink($full_path);
         }
-        
-        // Hapus dari database
+
         $delete_query = "DELETE FROM gambar_penginapan WHERE id_gambar = $id_gambar";
         $delete_result = mysqli_query($conn, $delete_query);
-        
+
         if ($delete_result) {
             // Log aktivitas 
             if (isset($_SESSION['admin_id'])) {
@@ -50,19 +47,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_gambar'])) {
                 $aksi = "Hapus gambar ID $id_gambar";
                 mysqli_query($conn, "
                     INSERT INTO log_aktivitas_admin (admin_id, aksi, target_id)
-                    VALUES ($adminId, '".mysqli_real_escape_string($conn, $aksi)."', $id_gambar)
+                    VALUES ($adminId, '" . mysqli_real_escape_string($conn, $aksi) . "', $id_gambar)
                 ");
             }
-            
+
             echo json_encode(['success' => true, 'message' => 'Gambar berhasil dihapus']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Gagal menghapus gambar dari database']);
         }
-        
+
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
-    
+
 } else {
     echo json_encode(['success' => false, 'message' => 'Invalid request']);
 }
