@@ -86,7 +86,7 @@ YogyaStay adalah platform digital yang memudahkan wisatawan mencari dan memesan 
 
 **Tugas:** UAS Pemrograman Web  
 **Semester:** Gasal 2025/2026  
-**Program Studi:** Pendidikan Teknik Informatika dan Komputer
+**Program Studi:** Pendidikan Teknik Informatika dan Komputer         
 **Universitas Sebelas Maret**
 
 ## 👩‍💻 Developer
