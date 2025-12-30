@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 30 Des 2025 pada 10.16
--- Versi server: 10.4.32-MariaDB
--- Versi PHP: 8.0.30
+-- Generation Time: Dec 30, 2025 at 01:47 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -25,7 +25,7 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `blog`
+-- Table structure for table `blog`
 --
 
 CREATE TABLE `blog` (
@@ -39,7 +39,7 @@ CREATE TABLE `blog` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `blog`
+-- Dumping data for table `blog`
 --
 
 INSERT INTO `blog` (`id_blog`, `judul`, `konten`, `thumbnail`, `tanggal_publish`, `id_admin`, `status`) VALUES
@@ -51,7 +51,7 @@ INSERT INTO `blog` (`id_blog`, `judul`, `konten`, `thumbnail`, `tanggal_publish`
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `booking`
+-- Table structure for table `booking`
 --
 
 CREATE TABLE `booking` (
@@ -70,7 +70,7 @@ CREATE TABLE `booking` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `booking`
+-- Dumping data for table `booking`
 --
 
 INSERT INTO `booking` (`id_booking`, `kode_booking`, `id_user`, `id_penginapan`, `id_tipe_kamar`, `tanggal_checkin`, `tanggal_checkout`, `jumlah_kamar`, `jumlah_orang`, `total_harga`, `status_reservasi`, `created_at`) VALUES
@@ -99,7 +99,7 @@ INSERT INTO `booking` (`id_booking`, `kode_booking`, `id_user`, `id_penginapan`,
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `checkin`
+-- Table structure for table `checkin`
 --
 
 CREATE TABLE `checkin` (
@@ -112,7 +112,7 @@ CREATE TABLE `checkin` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `checkin`
+-- Dumping data for table `checkin`
 --
 
 INSERT INTO `checkin` (`id_checkin`, `id_booking`, `email_pemesan`, `foto_ktp`, `status_checkin`, `waktu_checkin`) VALUES
@@ -125,7 +125,7 @@ INSERT INTO `checkin` (`id_checkin`, `id_booking`, `email_pemesan`, `foto_ktp`, 
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `fasilitas`
+-- Table structure for table `fasilitas`
 --
 
 CREATE TABLE `fasilitas` (
@@ -134,7 +134,7 @@ CREATE TABLE `fasilitas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `fasilitas`
+-- Dumping data for table `fasilitas`
 --
 
 INSERT INTO `fasilitas` (`id_fasilitas`, `nama_fasilitas`) VALUES
@@ -158,7 +158,7 @@ INSERT INTO `fasilitas` (`id_fasilitas`, `nama_fasilitas`) VALUES
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `gambar_penginapan`
+-- Table structure for table `gambar_penginapan`
 --
 
 CREATE TABLE `gambar_penginapan` (
@@ -170,7 +170,7 @@ CREATE TABLE `gambar_penginapan` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `gambar_penginapan`
+-- Dumping data for table `gambar_penginapan`
 --
 
 INSERT INTO `gambar_penginapan` (`id_gambar`, `id_penginapan`, `path_gambar`, `is_thumbnail`, `created_at`) VALUES
@@ -264,7 +264,7 @@ INSERT INTO `gambar_penginapan` (`id_gambar`, `id_penginapan`, `path_gambar`, `i
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `kabupaten`
+-- Table structure for table `kabupaten`
 --
 
 CREATE TABLE `kabupaten` (
@@ -273,7 +273,7 @@ CREATE TABLE `kabupaten` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `kabupaten`
+-- Dumping data for table `kabupaten`
 --
 
 INSERT INTO `kabupaten` (`id_kabupaten`, `nama_kabupaten`) VALUES
@@ -286,7 +286,7 @@ INSERT INTO `kabupaten` (`id_kabupaten`, `nama_kabupaten`) VALUES
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `kecamatan`
+-- Table structure for table `kecamatan`
 --
 
 CREATE TABLE `kecamatan` (
@@ -296,7 +296,7 @@ CREATE TABLE `kecamatan` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `kecamatan`
+-- Dumping data for table `kecamatan`
 --
 
 INSERT INTO `kecamatan` (`id_kecamatan`, `id_kabupaten`, `nama_kecamatan`) VALUES
@@ -382,7 +382,7 @@ INSERT INTO `kecamatan` (`id_kecamatan`, `id_kabupaten`, `nama_kecamatan`) VALUE
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `kontak_penginapan`
+-- Table structure for table `kontak_penginapan`
 --
 
 CREATE TABLE `kontak_penginapan` (
@@ -393,7 +393,7 @@ CREATE TABLE `kontak_penginapan` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `kontak_penginapan`
+-- Dumping data for table `kontak_penginapan`
 --
 
 INSERT INTO `kontak_penginapan` (`id_kontak`, `id_penginapan`, `jenis_kontak`, `isi_kontak`) VALUES
@@ -639,7 +639,7 @@ INSERT INTO `kontak_penginapan` (`id_kontak`, `id_penginapan`, `jenis_kontak`, `
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `log_aktivitas_admin`
+-- Table structure for table `log_aktivitas_admin`
 --
 
 CREATE TABLE `log_aktivitas_admin` (
@@ -651,7 +651,7 @@ CREATE TABLE `log_aktivitas_admin` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `log_aktivitas_admin`
+-- Dumping data for table `log_aktivitas_admin`
 --
 
 INSERT INTO `log_aktivitas_admin` (`id_log`, `id_admin`, `aksi`, `deskripsi`, `created_at`) VALUES
@@ -966,7 +966,7 @@ INSERT INTO `log_aktivitas_admin` (`id_log`, `id_admin`, `aksi`, `deskripsi`, `c
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `pembatalan`
+-- Table structure for table `pembatalan`
 --
 
 CREATE TABLE `pembatalan` (
@@ -985,7 +985,7 @@ CREATE TABLE `pembatalan` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `pembatalan`
+-- Dumping data for table `pembatalan`
 --
 
 INSERT INTO `pembatalan` (`id_pembatalan`, `id_booking`, `id_user`, `alasan`, `biaya_pembatalan`, `total_refund`, `tanggal_pengajuan`, `tanggal_diproses`, `status_pembatalan`, `alasan_admin`, `diproses_oleh`, `created_at`) VALUES
@@ -1000,7 +1000,7 @@ INSERT INTO `pembatalan` (`id_pembatalan`, `id_booking`, `id_user`, `alasan`, `b
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `pembayaran`
+-- Table structure for table `pembayaran`
 --
 
 CREATE TABLE `pembayaran` (
@@ -1013,7 +1013,7 @@ CREATE TABLE `pembayaran` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `pembayaran`
+-- Dumping data for table `pembayaran`
 --
 
 INSERT INTO `pembayaran` (`id_pembayaran`, `id_booking`, `metode_pembayaran`, `total_bayar`, `status_pembayaran`, `tanggal_bayar`) VALUES
@@ -1040,7 +1040,7 @@ INSERT INTO `pembayaran` (`id_pembayaran`, `id_booking`, `metode_pembayaran`, `t
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `penginapan`
+-- Table structure for table `penginapan`
 --
 
 CREATE TABLE `penginapan` (
@@ -1063,7 +1063,7 @@ CREATE TABLE `penginapan` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `penginapan`
+-- Dumping data for table `penginapan`
 --
 
 INSERT INTO `penginapan` (`id_penginapan`, `nama_penginapan`, `tipe_penginapan`, `id_kabupaten`, `id_kecamatan`, `alamat`, `deskripsi`, `tentang_kami`, `harga_mulai`, `rating`, `jumlah_review`, `is_featured`, `latitude`, `longitude`, `status`, `created_at`) VALUES
@@ -1149,7 +1149,7 @@ INSERT INTO `penginapan` (`id_penginapan`, `nama_penginapan`, `tipe_penginapan`,
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `penginapan_fasilitas`
+-- Table structure for table `penginapan_fasilitas`
 --
 
 CREATE TABLE `penginapan_fasilitas` (
@@ -1158,7 +1158,7 @@ CREATE TABLE `penginapan_fasilitas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `penginapan_fasilitas`
+-- Dumping data for table `penginapan_fasilitas`
 --
 
 INSERT INTO `penginapan_fasilitas` (`id_penginapan`, `id_fasilitas`) VALUES
@@ -2281,7 +2281,7 @@ INSERT INTO `penginapan_fasilitas` (`id_penginapan`, `id_fasilitas`) VALUES
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `refund`
+-- Table structure for table `refund`
 --
 
 CREATE TABLE `refund` (
@@ -2296,7 +2296,7 @@ CREATE TABLE `refund` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `refund`
+-- Dumping data for table `refund`
 --
 
 INSERT INTO `refund` (`id_refund`, `id_pembayaran`, `id_pembatalan`, `id_admin`, `jumlah_refund`, `alasan_refund`, `status_refund`, `tanggal_refund`) VALUES
@@ -2307,7 +2307,7 @@ INSERT INTO `refund` (`id_refund`, `id_pembayaran`, `id_pembatalan`, `id_admin`,
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `tipe_kamar`
+-- Table structure for table `tipe_kamar`
 --
 
 CREATE TABLE `tipe_kamar` (
@@ -2321,7 +2321,7 @@ CREATE TABLE `tipe_kamar` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `tipe_kamar`
+-- Dumping data for table `tipe_kamar`
 --
 
 INSERT INTO `tipe_kamar` (`id_tipe_kamar`, `id_penginapan`, `nama_tipe`, `harga_per_malam`, `kapasitas_orang`, `jumlah_kamar`, `deskripsi`) VALUES
@@ -2666,7 +2666,7 @@ INSERT INTO `tipe_kamar` (`id_tipe_kamar`, `id_penginapan`, `nama_tipe`, `harga_
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `users`
+-- Table structure for table `users`
 --
 
 CREATE TABLE `users` (
@@ -2682,12 +2682,12 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `users`
+-- Dumping data for table `users`
 --
 
 INSERT INTO `users` (`id_user`, `nama`, `email`, `password`, `no_telepon`, `role_id`, `created_at`, `updated_at`, `status`) VALUES
 (6, '', 'yogya@gmail.com', '$2y$10$HuAYz58qARl30o05Wk8PjOBj27Fit9zCoVNzIhifZ4dJaJmevJ4gG', NULL, 'admin', '2025-12-22 06:37:03', '2025-12-22 06:37:53', 'aktif'),
-(8, '', 'jhnnyr0623@gmail.com', '$2y$10$/E5pwctQXbLjlqc1Zqme2.CmZv/Np0cg8nUGTmuCOs4.qL3nW09US', NULL, 'user', '2025-12-25 23:44:49', '2025-12-29 18:09:24', 'aktif'),
+(8, 'yonti', 'jhnnyr0623@gmail.com', '$2y$10$/E5pwctQXbLjlqc1Zqme2.CmZv/Np0cg8nUGTmuCOs4.qL3nW09US', '', 'user', '2025-12-25 23:44:49', '2025-12-30 12:46:43', 'aktif'),
 (9, 'Na Jaemin', 'j@gmail.com', '$2y$10$JZ4VcmkLPdt.pOGX8nsy5eRDt/Xh5miSrhB1Pzrz/7zZ2dd/52QfW', '0812345678', 'user', '2025-12-29 04:52:43', '2025-12-29 18:22:33', 'aktif'),
 (11, 'Bismillah Nilai A', 'uaspemweb@gmail.com', '$2y$10$cijgR.RN34ml0w/hEqgSp.QLNY5Eq/nlKBPeHqZ4UD9r49SsAxivu', '', 'user', '2025-12-29 15:25:49', '2025-12-29 15:27:05', 'aktif');
 
@@ -2696,14 +2696,14 @@ INSERT INTO `users` (`id_user`, `nama`, `email`, `password`, `no_telepon`, `role
 --
 
 --
--- Indeks untuk tabel `blog`
+-- Indexes for table `blog`
 --
 ALTER TABLE `blog`
   ADD PRIMARY KEY (`id_blog`),
   ADD KEY `id_admin` (`id_admin`);
 
 --
--- Indeks untuk tabel `booking`
+-- Indexes for table `booking`
 --
 ALTER TABLE `booking`
   ADD PRIMARY KEY (`id_booking`),
@@ -2713,67 +2713,67 @@ ALTER TABLE `booking`
   ADD KEY `id_tipe_kamar` (`id_tipe_kamar`);
 
 --
--- Indeks untuk tabel `checkin`
+-- Indexes for table `checkin`
 --
 ALTER TABLE `checkin`
   ADD PRIMARY KEY (`id_checkin`),
   ADD KEY `id_booking` (`id_booking`);
 
 --
--- Indeks untuk tabel `fasilitas`
+-- Indexes for table `fasilitas`
 --
 ALTER TABLE `fasilitas`
   ADD PRIMARY KEY (`id_fasilitas`);
 
 --
--- Indeks untuk tabel `gambar_penginapan`
+-- Indexes for table `gambar_penginapan`
 --
 ALTER TABLE `gambar_penginapan`
   ADD PRIMARY KEY (`id_gambar`),
   ADD KEY `id_penginapan` (`id_penginapan`);
 
 --
--- Indeks untuk tabel `kabupaten`
+-- Indexes for table `kabupaten`
 --
 ALTER TABLE `kabupaten`
   ADD PRIMARY KEY (`id_kabupaten`);
 
 --
--- Indeks untuk tabel `kecamatan`
+-- Indexes for table `kecamatan`
 --
 ALTER TABLE `kecamatan`
   ADD PRIMARY KEY (`id_kecamatan`),
   ADD KEY `id_kabupaten` (`id_kabupaten`);
 
 --
--- Indeks untuk tabel `kontak_penginapan`
+-- Indexes for table `kontak_penginapan`
 --
 ALTER TABLE `kontak_penginapan`
   ADD PRIMARY KEY (`id_kontak`),
   ADD KEY `id_penginapan` (`id_penginapan`);
 
 --
--- Indeks untuk tabel `log_aktivitas_admin`
+-- Indexes for table `log_aktivitas_admin`
 --
 ALTER TABLE `log_aktivitas_admin`
   ADD PRIMARY KEY (`id_log`),
   ADD KEY `id_admin` (`id_admin`);
 
 --
--- Indeks untuk tabel `pembatalan`
+-- Indexes for table `pembatalan`
 --
 ALTER TABLE `pembatalan`
   ADD PRIMARY KEY (`id_pembatalan`);
 
 --
--- Indeks untuk tabel `pembayaran`
+-- Indexes for table `pembayaran`
 --
 ALTER TABLE `pembayaran`
   ADD PRIMARY KEY (`id_pembayaran`),
   ADD KEY `id_booking` (`id_booking`);
 
 --
--- Indeks untuk tabel `penginapan`
+-- Indexes for table `penginapan`
 --
 ALTER TABLE `penginapan`
   ADD PRIMARY KEY (`id_penginapan`),
@@ -2785,14 +2785,14 @@ ALTER TABLE `penginapan`
   ADD KEY `idx_harga` (`harga_mulai`) USING BTREE;
 
 --
--- Indeks untuk tabel `penginapan_fasilitas`
+-- Indexes for table `penginapan_fasilitas`
 --
 ALTER TABLE `penginapan_fasilitas`
   ADD PRIMARY KEY (`id_penginapan`,`id_fasilitas`),
   ADD KEY `id_fasilitas` (`id_fasilitas`);
 
 --
--- Indeks untuk tabel `refund`
+-- Indexes for table `refund`
 --
 ALTER TABLE `refund`
   ADD PRIMARY KEY (`id_refund`),
@@ -2801,119 +2801,119 @@ ALTER TABLE `refund`
   ADD KEY `refund_ibfk_3` (`id_pembatalan`);
 
 --
--- Indeks untuk tabel `tipe_kamar`
+-- Indexes for table `tipe_kamar`
 --
 ALTER TABLE `tipe_kamar`
   ADD PRIMARY KEY (`id_tipe_kamar`),
   ADD KEY `id_penginapan` (`id_penginapan`);
 
 --
--- Indeks untuk tabel `users`
+-- Indexes for table `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id_user`),
   ADD UNIQUE KEY `email` (`email`);
 
 --
--- AUTO_INCREMENT untuk tabel yang dibuang
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT untuk tabel `blog`
+-- AUTO_INCREMENT for table `blog`
 --
 ALTER TABLE `blog`
   MODIFY `id_blog` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
--- AUTO_INCREMENT untuk tabel `booking`
+-- AUTO_INCREMENT for table `booking`
 --
 ALTER TABLE `booking`
   MODIFY `id_booking` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
--- AUTO_INCREMENT untuk tabel `checkin`
+-- AUTO_INCREMENT for table `checkin`
 --
 ALTER TABLE `checkin`
   MODIFY `id_checkin` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT untuk tabel `fasilitas`
+-- AUTO_INCREMENT for table `fasilitas`
 --
 ALTER TABLE `fasilitas`
   MODIFY `id_fasilitas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
--- AUTO_INCREMENT untuk tabel `gambar_penginapan`
+-- AUTO_INCREMENT for table `gambar_penginapan`
 --
 ALTER TABLE `gambar_penginapan`
   MODIFY `id_gambar` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=481;
 
 --
--- AUTO_INCREMENT untuk tabel `kabupaten`
+-- AUTO_INCREMENT for table `kabupaten`
 --
 ALTER TABLE `kabupaten`
   MODIFY `id_kabupaten` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT untuk tabel `kontak_penginapan`
+-- AUTO_INCREMENT for table `kontak_penginapan`
 --
 ALTER TABLE `kontak_penginapan`
   MODIFY `id_kontak` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=369;
 
 --
--- AUTO_INCREMENT untuk tabel `log_aktivitas_admin`
+-- AUTO_INCREMENT for table `log_aktivitas_admin`
 --
 ALTER TABLE `log_aktivitas_admin`
   MODIFY `id_log` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=483;
 
 --
--- AUTO_INCREMENT untuk tabel `pembatalan`
+-- AUTO_INCREMENT for table `pembatalan`
 --
 ALTER TABLE `pembatalan`
   MODIFY `id_pembatalan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- AUTO_INCREMENT untuk tabel `pembayaran`
+-- AUTO_INCREMENT for table `pembayaran`
 --
 ALTER TABLE `pembayaran`
   MODIFY `id_pembayaran` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
--- AUTO_INCREMENT untuk tabel `penginapan`
+-- AUTO_INCREMENT for table `penginapan`
 --
 ALTER TABLE `penginapan`
   MODIFY `id_penginapan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=420;
 
 --
--- AUTO_INCREMENT untuk tabel `refund`
+-- AUTO_INCREMENT for table `refund`
 --
 ALTER TABLE `refund`
   MODIFY `id_refund` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
--- AUTO_INCREMENT untuk tabel `tipe_kamar`
+-- AUTO_INCREMENT for table `tipe_kamar`
 --
 ALTER TABLE `tipe_kamar`
   MODIFY `id_tipe_kamar` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=551;
 
 --
--- AUTO_INCREMENT untuk tabel `users`
+-- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
   MODIFY `id_user` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
--- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
+-- Constraints for dumped tables
 --
 
 --
--- Ketidakleluasaan untuk tabel `blog`
+-- Constraints for table `blog`
 --
 ALTER TABLE `blog`
   ADD CONSTRAINT `blog_ibfk_1` FOREIGN KEY (`id_admin`) REFERENCES `users` (`id_user`);
 
 --
--- Ketidakleluasaan untuk tabel `booking`
+-- Constraints for table `booking`
 --
 ALTER TABLE `booking`
   ADD CONSTRAINT `booking_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `users` (`id_user`),
@@ -2921,45 +2921,45 @@ ALTER TABLE `booking`
   ADD CONSTRAINT `booking_ibfk_3` FOREIGN KEY (`id_tipe_kamar`) REFERENCES `tipe_kamar` (`id_tipe_kamar`);
 
 --
--- Ketidakleluasaan untuk tabel `checkin`
+-- Constraints for table `checkin`
 --
 ALTER TABLE `checkin`
   ADD CONSTRAINT `checkin_ibfk_1` FOREIGN KEY (`id_booking`) REFERENCES `booking` (`id_booking`);
 
 --
--- Ketidakleluasaan untuk tabel `kontak_penginapan`
+-- Constraints for table `kontak_penginapan`
 --
 ALTER TABLE `kontak_penginapan`
   ADD CONSTRAINT `kontak_penginapan_ibfk_1` FOREIGN KEY (`id_penginapan`) REFERENCES `penginapan` (`id_penginapan`);
 
 --
--- Ketidakleluasaan untuk tabel `log_aktivitas_admin`
+-- Constraints for table `log_aktivitas_admin`
 --
 ALTER TABLE `log_aktivitas_admin`
   ADD CONSTRAINT `log_aktivitas_admin_ibfk_1` FOREIGN KEY (`id_admin`) REFERENCES `users` (`id_user`);
 
 --
--- Ketidakleluasaan untuk tabel `pembayaran`
+-- Constraints for table `pembayaran`
 --
 ALTER TABLE `pembayaran`
   ADD CONSTRAINT `pembayaran_ibfk_1` FOREIGN KEY (`id_booking`) REFERENCES `booking` (`id_booking`);
 
 --
--- Ketidakleluasaan untuk tabel `penginapan`
+-- Constraints for table `penginapan`
 --
 ALTER TABLE `penginapan`
   ADD CONSTRAINT `penginapan_ibfk_1` FOREIGN KEY (`id_kabupaten`) REFERENCES `kabupaten` (`id_kabupaten`),
   ADD CONSTRAINT `penginapan_ibfk_2` FOREIGN KEY (`id_kecamatan`) REFERENCES `kecamatan` (`id_kecamatan`);
 
 --
--- Ketidakleluasaan untuk tabel `penginapan_fasilitas`
+-- Constraints for table `penginapan_fasilitas`
 --
 ALTER TABLE `penginapan_fasilitas`
   ADD CONSTRAINT `penginapan_fasilitas_ibfk_1` FOREIGN KEY (`id_penginapan`) REFERENCES `penginapan` (`id_penginapan`),
   ADD CONSTRAINT `penginapan_fasilitas_ibfk_2` FOREIGN KEY (`id_fasilitas`) REFERENCES `fasilitas` (`id_fasilitas`);
 
 --
--- Ketidakleluasaan untuk tabel `refund`
+-- Constraints for table `refund`
 --
 ALTER TABLE `refund`
   ADD CONSTRAINT `refund_ibfk_1` FOREIGN KEY (`id_pembayaran`) REFERENCES `pembayaran` (`id_pembayaran`),
