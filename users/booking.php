@@ -30,12 +30,50 @@ if (!$penginapan) {
     exit;
 }
 
+// Fungsi untuk mengecek ketersediaan kamar
+function cekKetersediaanKamar($conn, $id_tipe_kamar, $checkin, $checkout) {
+    // Ambil jumlah kamar total dari tipe kamar
+    $sql_total = "SELECT jumlah_kamar FROM tipe_kamar WHERE id_tipe_kamar = $id_tipe_kamar";
+    $result_total = mysqli_query($conn, $sql_total);
+    $data_total = mysqli_fetch_assoc($result_total);
+    $total_kamar = $data_total ? $data_total['jumlah_kamar'] : 0;
+    
+    // Hitung jumlah kamar yang sudah dibooking pada rentang tanggal yang overlap
+    $sql_booked = "SELECT COALESCE(SUM(jumlah_kamar), 0) as total_booked 
+                   FROM booking 
+                   WHERE id_tipe_kamar = $id_tipe_kamar 
+                   AND status_reservasi IN ('dipesan', 'check-in')
+                   AND (
+                       (tanggal_checkin <= '$checkin' AND tanggal_checkout > '$checkin')
+                       OR (tanggal_checkin < '$checkout' AND tanggal_checkout >= '$checkout')
+                       OR (tanggal_checkin >= '$checkin' AND tanggal_checkout <= '$checkout')
+                   )";
+    
+    $result_booked = mysqli_query($conn, $sql_booked);
+    $data_booked = mysqli_fetch_assoc($result_booked);
+    $kamar_terbooked = $data_booked ? $data_booked['total_booked'] : 0;
+    
+    // Hitung kamar yang masih tersedia
+    $kamar_tersedia = $total_kamar - $kamar_terbooked;
+    
+    return max(0, $kamar_tersedia);
+}
+
 // Ambil data tipe kamar jika ada
 $tipe_kamar = null;
+$jumlah_kamar_tersedia = 0;
+$kamar_tersedia_saat_ini = 0;
+
 if ($id_tipe_kamar > 0) {
     $sql_kamar = "SELECT * FROM tipe_kamar WHERE id_tipe_kamar = $id_tipe_kamar AND id_penginapan = $id_penginapan";
     $result_kamar = mysqli_query($conn, $sql_kamar);
     $tipe_kamar = mysqli_fetch_assoc($result_kamar);
+    
+    if ($tipe_kamar) {
+        $jumlah_kamar_tersedia = $tipe_kamar['jumlah_kamar'];
+        // Cek ketersediaan untuk tanggal yang dipilih
+        $kamar_tersedia_saat_ini = cekKetersediaanKamar($conn, $id_tipe_kamar, $checkin, $checkout);
+    }
 }
 
 // Hitung jumlah malam
@@ -65,16 +103,27 @@ $step = isset($_GET['step']) ? intval($_GET['step']) : 1;
 
 // Simpan data step 1 ke session
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['step1'])) {
-    $_SESSION['booking_data'] = [
-        'nama_lengkap' => $_POST['nama_lengkap'],
-        'email' => $_POST['email'],
-        'telepon' => $_POST['telepon'],
-        'jumlah_kamar' => $_POST['jumlah_kamar'],
-        'checkin' => $_POST['checkin'],
-        'checkout' => $_POST['checkout']
-    ];
-    header("Location: booking.php?id_penginapan=$id_penginapan&id_tipe_kamar=$id_tipe_kamar&checkin={$_POST['checkin']}&checkout={$_POST['checkout']}&jumlah_kamar={$_POST['jumlah_kamar']}&step=2");
-    exit;
+    $jumlah_kamar_request = intval($_POST['jumlah_kamar']);
+    $checkin_request = $_POST['checkin'];
+    $checkout_request = $_POST['checkout'];
+    
+    // Validasi ketersediaan kamar
+    $kamar_tersedia = cekKetersediaanKamar($conn, $id_tipe_kamar, $checkin_request, $checkout_request);
+    
+    if ($jumlah_kamar_request > $kamar_tersedia) {
+        $error_message = "Maaf, hanya tersedia <strong>" . $kamar_tersedia . " kamar</strong> untuk tanggal yang Anda pilih.<br><br>Silakan kurangi jumlah kamar atau pilih tanggal lain.";
+    } else {
+        $_SESSION['booking_data'] = [
+            'nama_lengkap' => $_POST['nama_lengkap'],
+            'email' => $_POST['email'],
+            'telepon' => $_POST['telepon'],
+            'jumlah_kamar' => $jumlah_kamar_request,
+            'checkin' => $checkin_request,
+            'checkout' => $checkout_request
+        ];
+        header("Location: booking.php?id_penginapan=$id_penginapan&id_tipe_kamar=$id_tipe_kamar&checkin={$checkin_request}&checkout={$checkout_request}&jumlah_kamar={$jumlah_kamar_request}&step=2");
+        exit;
+    }
 }
 
 // Proses pembayaran (step 2)
@@ -99,6 +148,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['konfirmasi_pembayaran'
     $tanggal_checkout = mysqli_real_escape_string($conn, $_POST['checkout']);
     $jumlah_kamar_post = intval($_POST['jumlah_kamar']);
     $metode_pembayaran = mysqli_real_escape_string($conn, $_POST['metode_pembayaran']);
+    
+    // VALIDASI ULANG KETERSEDIAAN KAMAR SEBELUM MENYIMPAN
+    $kamar_tersedia_final = cekKetersediaanKamar($conn, $id_tipe_kamar_post, $tanggal_checkin, $tanggal_checkout);
+    
+    if ($jumlah_kamar_post > $kamar_tersedia_final) {
+        echo json_encode([
+            'success' => false, 
+            'message' => "Maaf, hanya tersedia $kamar_tersedia_final kamar untuk tanggal yang Anda pilih. Silakan refresh halaman dan coba lagi."
+        ]);
+        exit;
+    }
     
     // Hitung ulang total harga untuk keamanan 
     $jumlah_malam_final = 0;
@@ -249,6 +309,59 @@ require_once 'header.php';
         color: #1a1a1a;
         text-align: center;
         margin-bottom: 30px;
+    }
+
+    /* ========= AVAILABILITY ALERT ========= */
+    .availability-alert {
+        background: #fef3c7;
+        border: 2px solid #fbbf24;
+        border-radius: 12px;
+        padding: 12px 15px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .availability-alert.success {
+        background: #d1fae5;
+        border-color: #10b981;
+    }
+
+    .availability-alert.warning {
+        background: #fef3c7;
+        border-color: #fbbf24;
+    }
+
+    .availability-alert.error {
+        background: #fee2e2;
+        border-color: #ef4444;
+    }
+
+    .availability-alert i {
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .availability-alert.success i {
+        color: #10b981;
+    }
+
+    .availability-alert.warning i {
+        color: #f59e0b;
+    }
+
+    .availability-alert.error i {
+        color: #ef4444;
+    }
+
+    .availability-text {
+        flex: 1;
+    }
+
+    .availability-text strong {
+        font-size: 14px;
+        font-weight: 600;
     }
 
     /* ========= STEPPER ========= */
@@ -592,6 +705,12 @@ require_once 'header.php';
         width: 100%;
     }
 
+    .btn:disabled {
+        background: #d1d5db;
+        cursor: not-allowed;
+        transform: none;
+    }
+
     /* ========= RESPONSIVE ========= */
     @media (max-width: 768px) {
         .booking-card {
@@ -650,6 +769,41 @@ require_once 'header.php';
 
             <?php if ($step == 1) { ?>
                 <!-- STEP 1: DATA KONTAK -->
+                
+                <!-- Alert Ketersediaan Kamar -->
+                <?php if ($id_tipe_kamar > 0 && $kamar_tersedia_saat_ini > 0) { 
+                    $alert_class = $kamar_tersedia_saat_ini <= 3 ? 'warning' : 'success';
+                    $icon_class = $kamar_tersedia_saat_ini <= 3 ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill';
+                ?>
+                <div class="availability-alert <?= $alert_class ?>">
+                    <i class="bi <?= $icon_class ?>"></i>
+                    <div class="availability-text">
+                        <strong><?= $kamar_tersedia_saat_ini ?> kamar tersedia</strong>
+                    </div>
+                </div>
+                <?php } elseif ($id_tipe_kamar > 0 && $kamar_tersedia_saat_ini == 0) { ?>
+                <div class="availability-alert error">
+                    <i class="bi bi-x-circle-fill"></i>
+                    <div class="availability-text">
+                        <strong>Tidak ada kamar tersedia</strong>
+                    </div>
+                </div>
+                <?php } ?>
+
+                <?php if (isset($error_message)) { ?>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            title: 'Kamar Tidak Tersedia!',
+                            html: '<?= $error_message ?>',
+                            icon: 'error',
+                            confirmButtonColor: '#8da6daff',
+                            confirmButtonText: 'OK'
+                        });
+                    });
+                </script>
+                <?php } ?>
+                
                 <form method="POST" class="booking-form" id="bookingForm" onsubmit="return validateBookingForm()">
                     <input type="hidden" name="step1" value="1">
 
@@ -709,15 +863,17 @@ require_once 'header.php';
 
                         <div class="form-group">
                             <label class="form-label">Jumlah Kamar</label>
-                            <div class="input-with-icon">
-                                <input type="number" name="jumlah_kamar" class="form-input" value="<?= $jumlah_kamar ?>"
-                                    min="1" required>
-                            </div>
+                            <input type="number" name="jumlah_kamar" id="jumlahKamarInput" class="form-input" 
+                                value="<?= min($jumlah_kamar, $kamar_tersedia_saat_ini) ?>"
+                                min="1" 
+                                max="<?= $kamar_tersedia_saat_ini ?>" 
+                                <?= $kamar_tersedia_saat_ini == 0 ? 'disabled' : '' ?>
+                                required>
                         </div>
                     </div>
 
                     <div class="button-group">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="submitBtn" <?= $kamar_tersedia_saat_ini == 0 ? 'disabled' : '' ?>>
                             Lanjutkan
                             <i class="bi bi-arrow-right"></i>
                         </button>
@@ -941,9 +1097,16 @@ require_once 'header.php';
     function validateBookingForm() {
         const checkinInput = document.getElementById('checkinDate');
         const checkoutInput = document.getElementById('checkoutDate');
+        const jumlahKamarInput = document.getElementById('jumlahKamarInput');
         
         if (!checkinInput.value || !checkoutInput.value) {
-            alert('Mohon pilih tanggal check-in dan check-out!');
+            Swal.fire({
+                title: 'Perhatian!',
+                text: 'Mohon pilih tanggal check-in dan check-out!',
+                icon: 'warning',
+                confirmButtonColor: '#8da6daff',
+                confirmButtonText: 'OK'
+            });
             return false;
         }
         
@@ -951,7 +1114,27 @@ require_once 'header.php';
         const checkout = new Date(checkoutInput.value);
         
         if (checkout <= checkin) {
-            alert('Tanggal check-out harus setelah tanggal check-in!');
+            Swal.fire({
+                title: 'Perhatian!',
+                text: 'Tanggal check-out harus setelah tanggal check-in!',
+                icon: 'warning',
+                confirmButtonColor: '#8da6daff',
+                confirmButtonText: 'OK'
+            });
+            return false;
+        }
+
+        const maxKamar = parseInt(jumlahKamarInput.max);
+        const jumlahKamar = parseInt(jumlahKamarInput.value);
+
+        if (jumlahKamar > maxKamar) {
+            Swal.fire({
+                title: 'Kamar Tidak Tersedia!',
+                html: `Maaf, hanya tersedia <strong>${maxKamar} kamar</strong> untuk tanggal yang Anda pilih.`,
+                icon: 'error',
+                confirmButtonColor: '#8da6daff',
+                confirmButtonText: 'OK'
+            });
             return false;
         }
         
