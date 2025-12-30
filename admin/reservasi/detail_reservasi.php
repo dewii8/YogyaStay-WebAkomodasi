@@ -52,53 +52,6 @@ if(isset($_POST['action']) && $_POST['action'] === 'checkin' && isset($_POST['id
     exit();
 }
 
-// Handle cancel booking action
-if(isset($_POST['action']) && $_POST['action'] === 'cancel' && isset($_POST['id_booking'])) {
-    $id_booking = intval($_POST['id_booking']);
-    $id_admin = intval($_SESSION['id_user']);
-    $alasan = isset($_POST['alasan']) ? trim($_POST['alasan']) : 'Dibatalkan oleh admin';
-    
-    // Get booking details for logging
-    $booking_query = "SELECT b.kode_booking, u.nama FROM booking b 
-                      JOIN users u ON b.id_user = u.id_user 
-                      WHERE b.id_booking = ?";
-    $stmt_booking = $conn->prepare($booking_query);
-    $stmt_booking->bind_param("i", $id_booking);
-    $stmt_booking->execute();
-    $booking_result = $stmt_booking->get_result();
-    $booking_info = $booking_result->fetch_assoc();
-    
-    // Update booking status to dibatalkan
-    $update_query = "UPDATE booking SET status_reservasi = 'dibatalkan' WHERE id_booking = ?";
-    $stmt_update = $conn->prepare($update_query);
-    
-    if($stmt_update) {
-        $stmt_update->bind_param("i", $id_booking);
-        
-        if($stmt_update->execute()) {
-            // Log aktivitas admin
-            $log_query = "INSERT INTO log_aktivitas_admin (id_admin, aksi, deskripsi, created_at) VALUES (?, ?, ?, NOW())";
-            $stmt_log = $conn->prepare($log_query);
-            
-            if($stmt_log) {
-                $aksi = "Batalkan Reservasi";
-                $kode_booking = $booking_info['kode_booking'] ?? $id_booking;
-                $nama_user = $booking_info['nama'] ?? 'User';
-                $deskripsi = "Admin ID $id_admin membatalkan booking $kode_booking atas nama $nama_user. Alasan: $alasan";
-                $stmt_log->bind_param("iss", $id_admin, $aksi, $deskripsi);
-                $stmt_log->execute();
-            }
-            
-            $_SESSION['success'] = "Reservasi berhasil dibatalkan!";
-        } else {
-            $_SESSION['error'] = "Gagal membatalkan reservasi: " . $conn->error;
-        }
-    }
-    
-    header("Location: detail_reservasi.php?id=" . $id_booking);
-    exit();
-}
-
 // Handle checkout action  
 if(isset($_POST['action']) && $_POST['action'] === 'checkout' && isset($_POST['id_booking'])) {
     $id_booking = intval($_POST['id_booking']);
@@ -605,50 +558,6 @@ $display_status = empty($reservation['status_reservasi']) ? 'dipesan' : $reserva
             background: #059669;
         }
 
-        .btn-danger {
-            background: #fff;
-            color: #dc2626;
-            border: 2px solid #fecaca;
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        .btn-danger:hover {
-            background: #fef2f2;
-            border-color: #fca5a5;
-        }
-
-        .alert-box {
-            background: #fef3c7;
-            border: 2px solid #fde68a;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .alert-content {
-            display: flex;
-            gap: 10px;
-            color: #92400e;
-            margin-bottom: 12px;
-        }
-
-        .alert-content i {
-            flex-shrink: 0;
-            font-size: 18px;
-        }
-
-        .alert-content p {
-            font-size: 12px;
-            font-weight: 500;
-            margin: 0;
-            line-height: 1.5;
-        }
-
         .user-info {
             padding-top: 25px;
             margin-top: 25px;
@@ -956,9 +865,6 @@ $display_status = empty($reservation['status_reservasi']) ? 'dipesan' : $reserva
                                     <i class="bi bi-check-lg"></i> Konfirmasi Check-In
                                 </button>
                             </form>
-                            <button class="btn btn-danger" onclick="confirmCancel()">
-                                <i class="bi bi-x-lg"></i> Batalkan Pesanan
-                            </button>
                         </div>
                         <?php elseif($display_status === 'check-in'): ?>
                         <div class="action-buttons">
@@ -1089,57 +995,6 @@ function confirmCheckout() {
     }).then((result) => {
         if (result.isConfirmed) {
             document.getElementById('checkoutForm').submit();
-        }
-    });
-}
-
-function confirmCancel() {
-    Swal.fire({
-        title: 'Batalkan Reservasi?',
-        html: `
-            <div style="text-align: left; padding: 15px;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1f2937;">
-                    Alasan Pembatalan:
-                </label>
-                <textarea 
-                    id="alasan" 
-                    class="swal2-textarea" 
-                    placeholder="Masukkan alasan pembatalan..."
-                    style="width: 100%; min-height: 80px; font-family: 'Poppins', sans-serif;"
-                ></textarea>
-                <div style="background: #fee2e2; padding: 12px; border-radius: 8px; border-left: 4px solid #ef4444; margin-top: 15px;">
-                    <p style="color: #991b1b; font-size: 13px; margin: 0;">
-                        ⚠ Tindakan ini tidak dapat dibatalkan
-                    </p>
-                </div>
-            </div>
-        `,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: '✗ Ya, Batalkan Reservasi',
-        cancelButtonText: 'Tidak',
-        reverseButtons: true,
-        preConfirm: () => {
-            const alasan = document.getElementById('alasan').value;
-            if (!alasan || alasan.trim().length < 10) {
-                Swal.showValidationMessage('Alasan minimal 10 karakter');
-                return false;
-            }
-            return alasan;
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.innerHTML = `
-                <input type="hidden" name="action" value="cancel">
-                <input type="hidden" name="id_booking" value="<?php echo $id_booking; ?>">
-                <input type="hidden" name="alasan" value="${result.value}">
-            `;
-            document.body.appendChild(form);
-            form.submit();
         }
     });
 }
