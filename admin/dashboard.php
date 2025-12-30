@@ -164,10 +164,11 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
     <script src="https://code.highcharts.com/highcharts.js"></script>
 
     <style>
+        /* ========= BASE STYLES ========= */
         * {
             box-sizing: border-box;
             margin: 0;
-            padding: 0
+            padding: 0;
         }
 
         body {
@@ -178,14 +179,14 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
 
         .layout {
             display: flex;
-            min-height: 100vh
+            min-height: 100vh;
         }
 
         .content {
             margin-left: 240px;
             padding: 30px;
             width: 100%;
-            max-width: 1400px
+            max-width: 1400px;
         }
 
         .topbar {
@@ -200,7 +201,7 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
             font-size: 26px;
             background: none;
             border: none;
-            cursor: pointer
+            cursor: pointer;
         }
 
         h1 {
@@ -213,7 +214,7 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
             padding-bottom: 8px;
         }
 
-        /* Cards */
+        /* ========= CARDS ========= */
         .cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -237,11 +238,11 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
         }
 
         .card.refund {
-            border-color: #f59e0b
+            border-color: #f59e0b;
         }
 
         .card.income {
-            border-color: #6366f1
+            border-color: #6366f1;
         }
 
         .card small {
@@ -259,7 +260,7 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
             margin: 0;
         }
 
-        /* Chart Grid */
+        /* ========= CHART GRID ========= */
         .chart-grid {
             margin-top: 35px;
             display: grid;
@@ -287,7 +288,7 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
             width: 100%;
         }
 
-        /* Table Section */
+        /* ========= TABLE SECTION ========= */
         .table-box {
             background: #fff;
             padding: 30px;
@@ -329,7 +330,7 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
             background: #94a3b8;
         }
 
-        /* Filter Tabs */
+        /* ========= FILTER TABS ========= */
         .filter-tabs {
             display: flex;
             gap: 10px;
@@ -350,6 +351,7 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            white-space: nowrap;
         }
 
         .filter-tab:hover {
@@ -375,6 +377,7 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
             background: rgba(255, 255, 255, 0.3);
         }
 
+        /* ========= TABLE ========= */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -398,6 +401,7 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
             font-weight: 600;
             color: #374151;
             font-size: 14px;
+            white-space: nowrap;
         }
 
         td {
@@ -421,23 +425,16 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
             font-size: 12px;
             font-weight: 600;
             display: inline-block;
+            white-space: nowrap;
         }
 
-        .status.pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
+        .status.pending,
         .status.dipesan {
             background: #fef3c7;
             color: #92400e;
         }
 
-        .status.confirmed {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
+        .status.confirmed,
         .status.check-in {
             background: #dbeafe;
             color: #1e40af;
@@ -448,11 +445,7 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
             color: #065f46;
         }
 
-        .status.dibatalkan {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
+        .status.dibatalkan,
         .status.cancelled {
             background: #fee2e2;
             color: #991b1b;
@@ -470,36 +463,295 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
             font-size: 14px;
         }
 
+        /* ========= RESPONSIVE DESIGN ========= */
 
-        @media(max-width:768px) {
+        /* Tablet Landscape (992px - 1200px) */
+        @media (max-width: 1200px) {
             .content {
-                margin-left: 0;
-                padding: 20px
-            }
-
-            .toggle-btn {
-                display: block
+                padding: 25px;
             }
 
             .cards {
-                grid-template-columns: 1fr
+                gap: 20px;
             }
 
             .chart-grid {
-                grid-template-columns: 1fr
+                gap: 20px;
+            }
+        }
+
+        /* Tablet Portrait (768px - 991px) */
+        @media (max-width: 991px) {
+            .content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .toggle-btn {
+                display: block;
             }
 
             h1 {
-                font-size: 24px
+                font-size: 28px;
+            }
+
+            .cards {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 15px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .card small {
+                font-size: 13px;
+            }
+
+            .card h2 {
+                font-size: 18px;
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .chart-container {
+                height: 320px;
+            }
+
+            .table-box {
+                padding: 25px;
+            }
+
+            .table-box h3 {
+                font-size: 18px;
+            }
+        }
+
+        /* Mobile Landscape (576px - 767px) */
+        @media (max-width: 767px) {
+            .content {
+                padding: 15px;
+            }
+
+            .topbar {
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+                padding-bottom: 6px;
+                border-bottom-width: 3px;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                margin-top: 20px;
+                margin-bottom: 30px;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            .card small {
+                font-size: 12px;
+                margin-bottom: 8px;
+            }
+
+            .card h2 {
+                font-size: 17px;
+            }
+
+            .chart-grid {
+                margin-top: 25px;
+                gap: 15px;
+                margin-bottom: 30px;
+            }
+
+            .chart-box {
+                padding: 20px;
+            }
+
+            .chart-box h3 {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+
+            .chart-container {
+                height: 280px;
+            }
+
+            .table-box {
+                padding: 20px;
+            }
+
+            .table-box h3 {
+                font-size: 17px;
+                margin-bottom: 15px;
             }
 
             .filter-tabs {
-                gap: 8px
+                gap: 8px;
+                margin-bottom: 20px;
             }
 
             .filter-tab {
                 padding: 8px 15px;
-                font-size: 13px
+                font-size: 13px;
+            }
+
+            .filter-tab .badge {
+                padding: 2px 6px;
+                font-size: 11px;
+            }
+
+            .table-wrapper {
+                max-height: 280px;
+            }
+
+            th,
+            td {
+                padding: 12px 10px;
+                font-size: 13px;
+            }
+
+            th {
+                font-size: 12px;
+            }
+
+            .status {
+                padding: 5px 10px;
+                font-size: 11px;
+            }
+        }
+
+        /* Mobile Portrait (< 576px) */
+        @media (max-width: 575px) {
+            .content {
+                padding: 12px;
+            }
+
+            .topbar {
+                margin-bottom: 15px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .cards {
+                gap: 12px;
+                margin-top: 15px;
+                margin-bottom: 25px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .card small {
+                font-size: 11px;
+            }
+
+            .card h2 {
+                font-size: 16px;
+            }
+
+            .chart-grid {
+                margin-top: 20px;
+                gap: 12px;
+                margin-bottom: 25px;
+            }
+
+            .chart-box {
+                padding: 15px;
+            }
+
+            .chart-box h3 {
+                font-size: 15px;
+                margin-bottom: 12px;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            .table-box {
+                padding: 15px;
+            }
+
+            .table-box h3 {
+                font-size: 16px;
+                margin-bottom: 12px;
+            }
+
+            .filter-tabs {
+                gap: 6px;
+                margin-bottom: 15px;
+            }
+
+            .filter-tab {
+                padding: 7px 12px;
+                font-size: 12px;
+            }
+
+            .filter-tab .badge {
+                padding: 1px 5px;
+                font-size: 10px;
+            }
+
+            .table-wrapper {
+                max-height: 250px;
+            }
+
+            th,
+            td {
+                padding: 10px 8px;
+                font-size: 12px;
+            }
+
+            th {
+                font-size: 11px;
+            }
+
+            .status {
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+
+            .no-data {
+                padding: 30px 15px;
+                font-size: 13px;
+            }
+        }
+
+        /* Extra Small Mobile (< 400px) */
+        @media (max-width: 399px) {
+            h1 {
+                font-size: 18px;
+            }
+
+            .card h2 {
+                font-size: 15px;
+            }
+
+            .chart-container {
+                height: 220px;
+            }
+
+            .filter-tab {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+
+            th,
+            td {
+                padding: 8px 6px;
+                font-size: 11px;
             }
         }
     </style>
@@ -512,6 +764,7 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
 
         <div class="content">
             <div class="topbar">
+                <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
                 <h1>Dashboard Admin YogyaStay</h1>
             </div>
 
@@ -623,6 +876,13 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
     </div>
 
     <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('active');
+            }
+        }
+
         // Data untuk Chart Pendapatan
         const dataPendapatan = <?= json_encode($dataPendapatanPerBulan) ?>;
         const kabupatenList = <?= json_encode($kabupatenList) ?>;
