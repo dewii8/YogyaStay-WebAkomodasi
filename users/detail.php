@@ -52,10 +52,30 @@ if (empty($gambar_array)) {
     $gambar_array = ['uploads/penginapan/default.jpg'];
 }
 
-// mengambil tipe kamar
-$sql_kamar = "SELECT * FROM tipe_kamar 
-              WHERE id_penginapan = $id_penginapan 
-              ORDER BY harga_per_malam ASC";
+// ========= MODIFIKASI: Query tipe kamar dengan ketersediaan real-time =========
+$sql_kamar = "SELECT 
+                tk.*,
+                tk.jumlah_kamar as total_kamar,
+                COALESCE(
+                    (SELECT SUM(b.jumlah_kamar) 
+                     FROM booking b 
+                     WHERE b.id_tipe_kamar = tk.id_tipe_kamar 
+                     AND b.status_reservasi IN ('dipesan', 'check-in')
+                     AND b.tanggal_checkout > CURDATE()
+                    ), 0
+                ) as kamar_terpakai,
+                (tk.jumlah_kamar - COALESCE(
+                    (SELECT SUM(b.jumlah_kamar) 
+                     FROM booking b 
+                     WHERE b.id_tipe_kamar = tk.id_tipe_kamar 
+                     AND b.status_reservasi IN ('dipesan', 'check-in')
+                     AND b.tanggal_checkout > CURDATE()
+                    ), 0
+                )) as kamar_tersedia
+              FROM tipe_kamar tk
+              WHERE tk.id_penginapan = $id_penginapan 
+              ORDER BY tk.harga_per_malam ASC";
+
 $result_kamar = mysqli_query($conn, $sql_kamar);
 
 if (!$result_kamar) {
@@ -258,11 +278,42 @@ require_once 'header.php';
     border-radius: 15px;
     overflow: hidden;
     transition: all 0.3s;
+    position: relative;
 }
 
 .room-card:hover {
     border-color: #f5a742;
     box-shadow: 0 5px 20px rgba(245, 167, 66, 0.2);
+}
+
+/* ========= BADGE KETERSEDIAAN ========= */
+.availability-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.availability-badge.available {
+    background: #10b981;
+    color: white;
+}
+
+.availability-badge.limited {
+    background: #f59e0b;
+    color: white;
+}
+
+.availability-badge.full {
+    background: #ef4444;
+    color: white;
 }
 
 .room-info {
@@ -281,6 +332,37 @@ require_once 'header.php';
     font-size: 14px;
     line-height: 1.6;
     margin-bottom: 15px;
+}
+
+/* ========= INFORMASI KETERSEDIAAN ========= */
+.availability-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: #f9fafb;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 13px;
+}
+
+.availability-info.available {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.availability-info.limited {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.availability-info.full {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.availability-info i {
+    font-size: 16px;
 }
 
 .room-price-box {
@@ -315,9 +397,15 @@ require_once 'header.php';
     transition: all 0.3s;
 }
 
-.btn-book-room:hover {
+.btn-book-room:hover:not(:disabled) {
     background: #fcd34d;
     transform: translateY(-2px);
+}
+
+.btn-book-room:disabled {
+    background: #d1d5db;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 /* ========= FASILITAS ========= */
@@ -680,24 +768,76 @@ require_once 'header.php';
                 <?php 
                 if ($result_kamar && mysqli_num_rows($result_kamar) > 0) {
                     while($kamar = mysqli_fetch_assoc($result_kamar)) { 
+                        // Tentukan status ketersediaan
+                        $kamar_tersedia = intval($kamar['kamar_tersedia']);
+                        $total_kamar = intval($kamar['total_kamar']);
+                        $kamar_terpakai = intval($kamar['kamar_terpakai']);
+                        
+                        // Tentukan badge dan info
+                        if ($kamar_tersedia <= 0) {
+                            $badge_class = 'full';
+                            $badge_text = 'Penuh';
+                            $badge_icon = 'bi-x-circle-fill';
+                            $info_class = 'full';
+                            $info_text = 'Kamar tidak tersedia';
+                            $info_icon = 'bi-x-circle';
+                            $btn_disabled = true;
+                        } elseif ($kamar_tersedia <= ceil($total_kamar * 0.3)) { // 30% atau kurang
+                            $badge_class = 'limited';
+                            $badge_text = 'Terbatas';
+                            $badge_icon = 'bi-exclamation-circle-fill';
+                            $info_class = 'limited';
+                            $info_text = "Tersisa $kamar_tersedia dari $total_kamar kamar";
+                            $info_icon = 'bi-exclamation-triangle';
+                            $btn_disabled = false;
+                        } else {
+                            $badge_class = 'available';
+                            $badge_text = 'Tersedia';
+                            $badge_icon = 'bi-check-circle-fill';
+                            $info_class = 'available';
+                            $info_text = "$kamar_tersedia kamar tersedia";
+                            $info_icon = 'bi-check-circle';
+                            $btn_disabled = false;
+                        }
                 ?>
                 <div class="room-card">
+                    <!-- Badge Ketersediaan -->
+                    <div class="availability-badge <?= $badge_class ?>">
+                        <i class="bi <?= $badge_icon ?>"></i>
+                        <span><?= $badge_text ?></span>
+                    </div>
+
                     <div class="room-info">
                         <h3 class="room-name"><?= htmlspecialchars($kamar['nama_tipe']) ?></h3>
+                        
                         <div class="room-features">
                             • Kapasitas: <?= $kamar['kapasitas_orang'] ?> orang<br>
-                            • Tersedia: <?= $kamar['jumlah_kamar'] ?> kamar<br>
+                            • Total: <?= $total_kamar ?> kamar<br>
                             <?php if (!empty($kamar['deskripsi'])): ?>
-                            • <?= htmlspecialchars($kamar['deskripsi']) ?>
+                            • <?= htmlspecialchars($kamar['deskripsi']) ?><br>
                             <?php endif; ?>
                         </div>
+
+                        <!-- Info Ketersediaan -->
+                        <div class="availability-info <?= $info_class ?>">
+                            <i class="bi <?= $info_icon ?>"></i>
+                            <span><?= $info_text ?></span>
+                        </div>
+
                         <div class="room-price-box">
                             <div>
                                 <div class="room-price-label">Per malam</div>
                                 <div class="room-price">Rp <?= number_format($kamar['harga_per_malam'], 0, ',', '.') ?></div>
                             </div>
                         </div>
-                        <button class="btn-book-room" onclick="checkLoginBeforeBooking(<?= $id_penginapan ?>, <?= $kamar['id_tipe_kamar'] ?>)">Pesan Kamar</button>
+                        
+                        <button 
+                            class="btn-book-room" 
+                            onclick="checkLoginBeforeBooking(<?= $id_penginapan ?>, <?= $kamar['id_tipe_kamar'] ?>)"
+                            <?= $btn_disabled ? 'disabled' : '' ?>
+                        >
+                            <?= $btn_disabled ? 'Kamar Penuh' : 'Pesan Kamar' ?>
+                        </button>
                     </div>
                 </div>
                 <?php 
@@ -705,8 +845,8 @@ require_once 'header.php';
                 } else {
                 ?>
                 <div style="text-align: center; padding: 40px; color: #9ca3af; grid-column: 1/-1;">
-                    <i class="bi bi-house"></i>
-                    <p style="font-size: 16px;">Belum ada data tipe kamar</p>
+                    <i class="bi bi-house" style="font-size: 48px;"></i>
+                    <p style="font-size: 16px; margin-top: 10px;">Belum ada data tipe kamar</p>
                 </div>
                 <?php } ?>
             </div>
@@ -860,7 +1000,7 @@ require_once 'header.php';
 
                 <?php if (isset($kontak_data['telepon'])): ?>
                 <div class="contact-item">
-                    <i class="bi bi-telephone"></i>
+                    <i class="bi bi-telephone contact-icon"></i>
                     <div class="contact-info">
                         <div class="contact-label">Telepon</div>
                         <div class="contact-value">
@@ -872,7 +1012,7 @@ require_once 'header.php';
 
                 <?php if (isset($kontak_data['whatsapp'])): ?>
                 <div class="contact-item">
-                    <i class="bi bi-chat-dots"></i>
+                    <i class="bi bi-chat-dots contact-icon"></i>
                     <div class="contact-info">
                         <div class="contact-label">WhatsApp</div>
                         <div class="contact-value">
@@ -884,7 +1024,7 @@ require_once 'header.php';
 
                 <?php if (isset($kontak_data['email'])): ?>
                 <div class="contact-item">
-                    <i class="bi bi-envelope"></i>
+                    <i class="bi bi-envelope contact-icon"></i>
                     <div class="contact-info">
                         <div class="contact-label">Email</div>
                         <div class="contact-value">
