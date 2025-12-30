@@ -764,7 +764,6 @@ $bulanNames = ['', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desem
 
         <div class="content">
             <div class="topbar">
-                <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
                 <h1>Dashboard Admin YogyaStay</h1>
             </div>
 
