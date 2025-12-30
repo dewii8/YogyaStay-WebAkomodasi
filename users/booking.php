@@ -51,7 +51,7 @@ if (!empty($checkin) && !empty($checkout)) {
     }
 }
 
-// Hitung total harga - DIPERBAIKI
+// Hitung total harga 
 $harga_per_malam = 0;
 if ($tipe_kamar && isset($tipe_kamar['harga_per_malam'])) {
     $harga_per_malam = $tipe_kamar['harga_per_malam'];
@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['step1'])) {
     exit;
 }
 
-// Proses pembayaran (step 2 -> insert database -> redirect success)
+// Proses pembayaran (step 2)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['konfirmasi_pembayaran'])) {
     // Cek apakah user sudah login
     if (!isset($_SESSION['user_id'])) {
@@ -122,7 +122,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['konfirmasi_pembayaran'
         }
     }
     
-    // Jika tidak ada harga tipe kamar, gunakan harga_mulai penginapan
     if ($harga_final == 0) {
         $sql_penginapan_harga = "SELECT harga_mulai FROM penginapan WHERE id_penginapan = $id_penginapan_post";
         $result_penginapan_harga = mysqli_query($conn, $sql_penginapan_harga);
@@ -140,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['konfirmasi_pembayaran'
     $email = mysqli_real_escape_string($conn, $booking_data['email']);
     $telepon = mysqli_real_escape_string($conn, $booking_data['telepon']);
     
-    // Generate kode booking (format: JS-XXXXXX)
+    // Generate kode booking 
     $kode_booking = 'JS-' . str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
     
     // Cek apakah kode booking sudah ada
@@ -150,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['konfirmasi_pembayaran'
         $check_kode = mysqli_query($conn, "SELECT kode_booking FROM booking WHERE kode_booking = '$kode_booking'");
     }
     
-    // Jumlah orang (default jumlah kamar * 2)
+    // Jumlah orang 
     $jumlah_orang = $jumlah_kamar_post * 2;
     
     // Insert ke tabel booking
@@ -207,7 +206,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['konfirmasi_pembayaran'
             echo json_encode(['success' => true, 'kode_booking' => $kode_booking]);
             exit;
         } else {
-            // Jika gagal insert pembayaran, hapus booking yang sudah dibuat (rollback manual)
             mysqli_query($conn, "DELETE FROM booking WHERE id_booking = $id_booking_baru");
             echo json_encode(['success' => false, 'message' => 'Error menyimpan data pembayaran']);
             exit;
@@ -223,7 +221,6 @@ $page_title = 'Booking Penginapan';
 require_once 'header.php';
 ?>
 
-<!-- SweetAlert2 CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
 <style>

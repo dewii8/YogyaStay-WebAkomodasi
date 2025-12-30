@@ -17,7 +17,7 @@ if ($id_penginapan <= 0) {
     exit;
 }
 
-// Query untuk mengambil detail penginapan
+// mengambil detail penginapan
 $sql = "SELECT p.*, kc.nama_kecamatan, kb.nama_kabupaten
         FROM penginapan p
         LEFT JOIN kecamatan kc ON p.id_kecamatan = kc.id_kecamatan
@@ -33,7 +33,7 @@ if (!$result || mysqli_num_rows($result) == 0) {
 
 $penginapan = mysqli_fetch_assoc($result);
 
-// Query untuk mengambil GAMBAR PENGINAPAN
+// mengambil GAMBAR PENGINAPAN
 $sql_gambar = "SELECT * FROM gambar_penginapan 
                WHERE id_penginapan = $id_penginapan 
                ORDER BY is_thumbnail DESC, created_at ASC";
@@ -52,7 +52,7 @@ if (empty($gambar_array)) {
     $gambar_array = ['uploads/penginapan/default.jpg'];
 }
 
-// Query untuk mengambil tipe kamar
+// mengambil tipe kamar
 $sql_kamar = "SELECT * FROM tipe_kamar 
               WHERE id_penginapan = $id_penginapan 
               ORDER BY harga_per_malam ASC";
@@ -62,7 +62,7 @@ if (!$result_kamar) {
     die("Error query tipe kamar: " . mysqli_error($conn));
 }
 
-// Query untuk mengambil FASILITAS
+// mengambil FASILITAS
 $sql_fasilitas = "SELECT f.* 
                   FROM fasilitas f
                   INNER JOIN penginapan_fasilitas pf ON f.id_fasilitas = pf.id_fasilitas
@@ -73,7 +73,7 @@ if (!$result_fasilitas) {
     die("Error query fasilitas: " . mysqli_error($conn));
 }
 
-// Query untuk mengambil KONTAK
+// mengambil KONTAK
 $sql_kontak = "SELECT * FROM kontak_penginapan WHERE id_penginapan = $id_penginapan";
 $result_kontak = mysqli_query($conn, $sql_kontak);
 

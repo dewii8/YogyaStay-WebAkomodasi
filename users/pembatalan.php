@@ -557,8 +557,7 @@ let isNavigatingAway = false;
 // Tombol Kembali dengan konfirmasi SweetAlert2
 document.getElementById('btnKembali').addEventListener('click', function() {
     const alasan = textarea.value.trim();
-    
-    // Jika ada teks yang sudah diisi, tampilkan konfirmasi
+     
     if (alasan.length > 0) {
         Swal.fire({
             title: 'Kembali ke Halaman Riwayat?',
@@ -575,12 +574,11 @@ document.getElementById('btnKembali').addEventListener('click', function() {
             reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
-                isNavigatingAway = true; // Set flag supaya beforeunload tidak trigger
+                isNavigatingAway = true; 
                 window.location.href = 'riwayat_reservasi.php';
             }
         });
     } else {
-        // Jika tidak ada data, langsung kembali
         isNavigatingAway = true;
         window.location.href = 'riwayat_reservasi.php';
     }
@@ -669,7 +667,7 @@ document.getElementById('btnSubmit').addEventListener('click', function() {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            isNavigatingAway = true; // Set flag supaya beforeunload tidak trigger
+            isNavigatingAway = true;
             
             // Show loading
             Swal.fire({
@@ -707,9 +705,9 @@ Swal.fire({
 });
 <?php endif; ?>
 
-// Prevent accidental page leave (HANYA jika TIDAK navigasi via tombol)
+// Prevent accidental page leave
 window.addEventListener('beforeunload', function(e) {
-    // Cek flag - jika user klik tombol, jangan tampilkan warning
+    // Cek flag 
     if (isNavigatingAway) {
         return undefined;
     }
