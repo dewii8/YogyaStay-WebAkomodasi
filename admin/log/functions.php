@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Jakarta');
 function addAdminLog($conn, $admin_id, $aksi, $deskripsi = null) {
     $stmt = $conn->prepare("INSERT INTO log_aktivitas_admin (id_admin, aksi, deskripsi) VALUES (?, ?, ?)");
     if (!$stmt) {
