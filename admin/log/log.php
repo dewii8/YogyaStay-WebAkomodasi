@@ -1,6 +1,9 @@
 <?php
 require_once '../../config.php';
 
+// Set timezone ke WIB (Waktu Indonesia Barat)
+date_default_timezone_set('Asia/Jakarta');
+
 if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] !== 'admin') {
     header("Location: ../../autentikasi/login.php");
     exit();
@@ -585,7 +588,7 @@ $query_aksi_types = mysqli_query($conn, "
                                         <td>
                                             <span class="time-badge">
                                                 <i class="bi bi-clock"></i>
-                                                <?= date('d M Y, H:i', strtotime($row['created_at'])) ?>
+                                                <?= date('d M Y, H:i', strtotime($row['created_at'])) ?> WIB
                                             </span>
                                         </td>
                                     </tr>
